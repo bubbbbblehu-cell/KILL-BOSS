@@ -900,7 +900,9 @@ body {
     display: flex;
     flex-direction: column;
 }
-
+.console-panel {
+    display: none !important;
+}
 .console-header {
     padding: 12px 15px;
     background: #222;
