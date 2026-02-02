@@ -897,12 +897,10 @@ body {
     border: 1px solid #333;
     border-radius: 12px 12px 0 0;
     overflow: hidden;
-    display: flex;
+    display: none;
     flex-direction: column;
 }
-.console-panel {
-    display: none !important;
-}
+
 .console-header {
     padding: 12px 15px;
     background: #222;
