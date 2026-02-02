@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BOSS KILL - 功能交互测试</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="phone-container">
+        <!-- 手机模拟器 -->
+        <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+                
+                <!-- 登录演示动画 -->
+                <div class="demo-overlay" id="demoOverlay">
+                    <button class="demo-skip" onclick="skipDemo()">跳过 →</button>
+                    <div class="demo-content">
+                        <div class="demo-emoji" id="demoEmoji">👔</div>
+                        <div class="demo-text" id="demoText">这是你的老板...</div>
+                        <div class="demo-quote" id="demoQuote"></div>
+                    </div>
+                    <div class="demo-progress">
+                        <div class="demo-progress-bar" id="demoProgress"></div>
+                    </div>
+                </div>
+
+                <!-- 登录页面 -->
+                <div class="page login-page active" id="loginPage">
+                    <div class="login-logo">
+                        <div class="emoji">💩</div>
+                        <h1>BOSS KILL</h1>
+                        <p style="color: var(--text-secondary); margin-top: 10px;">释放压力，扔掉烦恼</p>
+                    </div>
+                    <div class="login-form">
+                        <div class="form-group">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-input" id="loginEmail" placeholder="请输入邮箱" value="test@bosskill.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">密码</label>
+                            <input type="password" class="form-input" id="loginPassword" placeholder="请输入密码" value="123456">
+                        </div>
+                        <button class="btn btn-primary" onclick="handleLogin()">登 录</button>
+                        <button class="btn btn-secondary" onclick="handleRegister()">注册新账号</button>
+                        <button class="btn btn-guest" onclick="handleGuestLogin()">以游客身份进入</button>
+                    </div>
+                </div>
+
+                <!-- 首页/滑一滑 -->
+                <div class="page swipe-page" id="swipePage">
+                    <div class="banner-section">
+                        <div class="banner-title">🔥 Top3 热门作品</div>
+                        <div class="banner-scroll" id="bannerScroll">
+                            <!-- 动态生成 -->
+                        </div>
+                    </div>
+                    <div class="content-feed" id="contentFeed">
+                        <!-- 动态生成 -->
+                    </div>
+                    <div class="bottom-nav">
+                        <div class="nav-item active" onclick="switchPage('swipe')">
+                            <span class="nav-icon">🏠</span>
+                            <span class="nav-label">首页</span>
+                        </div>
+                        <div class="nav-item" onclick="switchPage('map')">
+                            <span class="nav-icon">🗺️</span>
+                            <span class="nav-label">地图</span>
+                        </div>
+                        <div class="nav-item" onclick="switchPage('draw')">
+                            <span class="nav-icon">🎨</span>
+                            <span class="nav-label">画画</span>
+                        </div>
+                        <div class="nav-item" onclick="switchPage('profile')">
+                            <span class="nav-icon">👤</span>
+                            <span class="nav-label">我的</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 地图页面 -->
+                <div class="page map-page" id="mapPage">
+                    <div class="map-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="poopCount">0</div>
+                            <div class="stat-label">便便数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="towerCount">0</div>
+                            <div class="stat-label">屎塔数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="buildingCount">0</div>
+                            <div class="stat-label">占领建筑</div>
+                        </div>
+                    </div>
+                    <div class="map-container" id="mapContainer">
+                        <div class="map-grid"></div>
+                        <!-- 动态生成便便和屎塔 -->
+                    </div>
+                    <div class="map-controls">
+                        <button class="map-btn map-btn-poop" onclick="throwPoop()">💩</button>
+                    </div>
+                    <div class="bottom-nav">
+                        <div class="nav-item" onclick="switchPage('swipe')">
+                            <span class="nav-icon">🏠</span>
+                            <span class="nav-label">首页</span>
+                        </div>
+                        <div class="nav-item active" onclick="switchPage('map')">
+                            <span class="nav-icon">🗺️</span>
+                            <span class="nav-label">地图</span>
+                        </div>
+                        <div class="nav-item" onclick="switchPage('draw')">
+                            <span class="nav-icon">🎨</span>
+                            <span class="nav-label">画画</span>
+                        </div>
+                        <div class="nav-item" onclick="switchPage('profile')">
+                            <span class="nav-icon">👤</span>
+                            <span class="nav-label">我的</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 绘画页面 -->
+                <div class="page draw-page" id="drawPage">
+                    <div class="page-header">
+                        <span class="page-title">✏️ 画你的老板</span>
+                        <button class="btn btn-primary" style="width: auto; padding: 8px 16px; margin: 0;" onclick="saveDrawing()">保存</button>
+                    </div>
+                    <div class="canvas-container">
+                        <canvas class="drawing-canvas" id="drawCanvas" width="335" height="335"></canvas>
+                    </div>
+                    <div class="sticker-panel" id="stickerPanel">
+                        <div class="sticker-grid">
+                            <span class="sticker-item" onclick="addSticker('👔')">👔</span>
+                            <span class="sticker-item" onclick="addSticker('👓')">👓</span>
+                            <span class="sticker-item" onclick="addSticker('👃')">👃</span>
+                            <span class="sticker-item" onclick="addSticker('👄')">👄</span>
+                            <span class="sticker-item" onclick="addSticker('👂')">👂</span>
+                            <span class="sticker-item" onclick="addSticker('🧑‍💼')">🧑‍💼</span>
+                            <span class="sticker-item" onclick="addSticker('💼')">💼</span>
+                            <span class="sticker-item" onclick="addSticker('📱')">📱</span>
+                            <span class="sticker-item" onclick="addSticker('💰')">💰</span>
+                            <span class="sticker-item" onclick="addSticker('🔥')">🔥</span>
+                        </div>
+                    </div>
+                    <div class="color-picker">
+                        <div class="color-dot active" style="background: #000" onclick="setColor('#000', this)"></div>
+                        <div class="color-dot" style="background: #ff0000" onclick="setColor('#ff0000', this)"></div>
+                        <div class="color-dot" style="background: #ff6b35" onclick="setColor('#ff6b35', this)"></div>
+                        <div class="color-dot" style="background: #ffc107" onclick="setColor('#ffc107', this)"></div>
+                        <div class="color-dot" style="background: #10b981" onclick="setColor('#10b981', this)"></div>
+                        <div class="color-dot" style="background: #06b6d4" onclick="setColor('#06b6d4', this)"></div>
+                        <div class="color-dot" style="background: #8b5cf6" onclick="setColor('#8b5cf6', this)"></div>
+                        <div class="color-dot" style="background: #ec4899" onclick="setColor('#ec4899', this)"></div>
+                    </div>
+                    <div class="draw-toolbar">
+                        <button class="tool-btn active" onclick="setTool('brush', this)">✏️</button>
+                        <button class="tool-btn" onclick="toggleStickers()">😀</button>
+                        <button class="tool-btn" onclick="undoDrawing()">↩️</button>
+                        <button class="tool-btn" onclick="redoDrawing()">↪️</button>
+                        <button class="tool-btn" onclick="clearCanvas()">🗑️</button>
+                    </div>
+                    <div class="bottom-nav">
+                        <div class="nav-item" onclick="switchPage('swipe')">
+                            <span class="nav-icon">🏠</span>
+                            <span class="nav-label">首页</span>
+                        </div>
+                        <div class="nav-item" onclick="switchPage('map')">
+                            <span class="nav-icon">🗺️</span>
+                            <span class="nav-label">地图</span>
+                        </div>
+                        <div class="nav-item active" onclick="switchPage('draw')">
+                            <span class="nav-icon">🎨</span>
+                            <span class="nav-label">画画</span>
+                        </div>
+                        <div class="nav-item" onclick="switchPage('profile')">
+                            <span class="nav-icon">👤</span>
+                            <span class="nav-label">我的</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 个人中心 -->
+                <div class="page profile-page" id="profilePage">
+                    <div class="profile-header">
+                        <div class="profile-avatar">👤</div>
+                        <div class="profile-name" id="profileName">游客用户</div>
+                        <div class="profile-email" id="profileEmail">未绑定邮箱</div>
+                        <div class="profile-stats">
+                            <div class="profile-stat">
+                                <div class="profile-stat-value" id="userPoints">120</div>
+                                <div class="profile-stat-label">积分</div>
+                            </div>
+                            <div class="profile-stat">
+                                <div class="profile-stat-value" id="userWorks">5</div>
+                                <div class="profile-stat-label">作品</div>
+                            </div>
+                            <div class="profile-stat">
+                                <div class="profile-stat-value" id="userCheckin">7</div>
+                                <div class="profile-stat-label">连续打卡</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-menu">
+                        <div class="menu-item" onclick="handleCheckin()">
+                            <div class="menu-left">
+                                <span class="menu-icon">📅</span>
+                                <span>每日打卡</span>
+                            </div>
+                            <span class="menu-arrow">→</span>
+                        </div>
+                        <div class="menu-item" onclick="showMyWorks()">
+                            <div class="menu-left">
+                                <span class="menu-icon">🎨</span>
+                                <span>我的作品</span>
+                            </div>
+                            <span class="menu-arrow">→</span>
+                        </div>
+                        <div class="menu-item" onclick="showFavorites()">
+                            <div class="menu-left">
+                                <span class="menu-icon">⭐</span>
+                                <span>我的收藏</span>
+                            </div>
+                            <span class="menu-arrow">→</span>
+                        </div>
+                        <div class="menu-item" onclick="showNotifications()">
+                            <div class="menu-left">
+                                <span class="menu-icon">🔔</span>
+                                <span>消息通知</span>
+                            </div>
+                            <span class="menu-arrow">→</span>
+                        </div>
+                        <div class="menu-item" onclick="handleLogout()">
+                            <div class="menu-left">
+                                <span class="menu-icon">🚪</span>
+                                <span>退出登录</span>
+                            </div>
+                            <span class="menu-arrow">→</span>
+                        </div>
+                    </div>
+                    <div class="bottom-nav">
+                        <div class="nav-item" onclick="switchPage('swipe')">
+                            <span class="nav-icon">🏠</span>
+                            <span class="nav-label">首页</span>
+                        </div>
+                        <div class="nav-item" onclick="switchPage('map')">
+                            <span class="nav-icon">🗺️</span>
+                            <span class="nav-label">地图</span>
+                        </div>
+                        <div class="nav-item" onclick="switchPage('draw')">
+                            <span class="nav-icon">🎨</span>
+                            <span class="nav-label">画画</span>
+                        </div>
+                        <div class="nav-item active" onclick="switchPage('profile')">
+                            <span class="nav-icon">👤</span>
+                            <span class="nav-label">我的</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API控制台 -->
+        <div class="console-panel">
+            <div class="console-header">
+                <span class="console-title">📡 API 调用日志</span>
+                <button class="console-clear" onclick="clearConsole()">清空</button>
+            </div>
+            <div class="console-body" id="consoleBody">
+                <div class="console-log event">
+                    <span class="log-time">--:--:--</span>
+                    <span class="log-type evt">[系统]</span>
+                    <span class="log-content">等待用户操作...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗 -->
+    <div class="modal-overlay" id="drawPromptModal">
+        <div class="modal-content">
+            <div class="modal-emoji">🎨</div>
+            <div class="modal-title">你也要画一个吗？</div>
+            <div class="modal-desc">释放你的创意，画出你老板的样子，扔到地图上去！</div>
+            <button class="modal-close" onclick="goToDraw()">去画画</button>
+            <button class="btn btn-guest" style="margin-top: 10px;" onclick="closeModal('drawPromptModal')">下次再说</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="main.js"></script>
+</body>
+</html>
