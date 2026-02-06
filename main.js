@@ -1,3 +1,25 @@
+// 1. 初始化 Supabase 客户端
+const supabaseUrl = 'https://rjqdxxwurocqsewvtdvf.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqcWR4eHd1cm9jcXNld3Z0ZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMTE5MDcsImV4cCI6MjA4NTc4NzkwN30.2RauWCLnayx_C1-0wTW6GDWcmFEX-u29EdX13OOkKeQ';
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+// 2. 立即测试是否能读取建筑数据
+async function testDbConnection() {
+    console.log("正在尝试连接数据库...");
+    const { data, error } = await supabase
+        .from('buildings')
+        .select('*');
+
+    if (error) {
+        console.error("❌ 连接失败:", error.message);
+    } else {
+        console.log("✅ 连接成功! 查找到建筑数量:", data.length);
+        console.log("数据内容:", data);
+        // 如果成功了，这里可以调用你原来的地图渲染函数
+    }
+}
+
+testDbConnection();
 // ==================== 全局状态 ====================
 const appState = {
     isLoggedIn: false,
