@@ -1,0 +1,15 @@
+{
+  "name": "boss-kill-option-b",
+  "version": "1.0.0",
+  "description": "BOSS KILL 选项B - 完整后端API服务",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
+    "uuid": "^9.0.0"
+  }
+}
