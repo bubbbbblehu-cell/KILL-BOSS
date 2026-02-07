@@ -1,5 +1,4 @@
-// ==================== 1. 最优先定义：全局状态 ====================
-// 必须放在最顶部，确保 handleLogin 等函数能找到它
+// ==================== 1. 全局状态 ====================
 const appState = {
     isLoggedIn: false,
     isGuest: false,
@@ -14,37 +13,37 @@ const appState = {
     favoritedContents: new Set()
 };
 
-// ==================== 2. 初始化 Supabase ====================
+const motivationalQuotes = [
+    "在最好的青春里，在格子间里激励自己开出最美的花！",
+    "工作虽苦，但扔大便的快乐谁懂？",
+    "老板再坏，也挡不住你扔便便的决心！",
+    "每一坨便便，都是对996的无声抗议"
+];
+
+// ==================== 2. Supabase 初始化 ====================
 const supabaseUrl = 'https://rjqdxxwurocqsewvtdvf.supabase.co';
 const supabaseKey = 'sb_publishable_HDVosfE-j_H7Hogv79aq-A_NwrN0Xsd';
 
-// 定义一个内部使用的变量名，避免与 SDK 冲突
 let _supabaseClient;
-
 try {
-    // 检查全局 supabase 对象是否存在（由 index.html 引入）
     if (typeof supabase !== 'undefined') {
         _supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-    } else {
-        console.error("Supabase SDK 尚未加载，请检查 index.html 的 script 标签位置");
     }
 } catch (err) {
-    console.error("Supabase 初始化失败:", err);
+    console.error("初始化错误:", err);
 }
 
-// ==================== 3. 功能函数定义 ====================
-// 将函数挂载到 window，确保 HTML 里的 onclick 能找到它们
+// ==================== 3. 核心功能函数 (全部挂载到 window) ====================
 
 // 登录逻辑
 window.handleLogin = async function() {
     const email = document.getElementById('loginEmail')?.value;
     const password = document.getElementById('loginPassword')?.value;
     
-    if (!email || !password) return alert("请输入邮箱和密码");
-    if (!_supabaseClient) return alert("数据库未连接");
-
     console.log("尝试登录:", email);
     
+    if (!_supabaseClient) return alert("网络连接异常，请检查科学上网环境或稍后再试");
+
     const { data, error } = await _supabaseClient.auth.signInWithPassword({
         email: email,
         password: password
@@ -55,45 +54,59 @@ window.handleLogin = async function() {
     } else {
         appState.isLoggedIn = true;
         appState.user = data.user;
-        alert("登录成功！");
         startLoginDemo();
     }
 };
 
-// 游客登录逻辑
+// 游客登录
 window.handleGuestLogin = function() {
     console.log("以游客身份进入");
     appState.isLoggedIn = true;
     appState.isGuest = true;
-    appState.user = { id: 'guest', name: '游客' };
+    appState.user = { id: 'guest', name: '匿名用户' };
     startLoginDemo();
 };
 
-// ==================== 4. UI 与 动画逻辑 ====================
-function startLoginDemo() {
+// 关键修复：跳过演示函数
+window.skipDemo = function() {
     const overlay = document.getElementById('demoOverlay');
-    if (overlay) overlay.classList.add('show');
-    // 动画结束后跳转
-    setTimeout(() => {
-        window.switchPage('swipe');
-    }, 1000);
-}
+    if (overlay) overlay.classList.remove('show');
+    window.switchPage('swipe');
+};
 
+// 页面切换
 window.switchPage = function(pageName) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const target = document.getElementById(pageName + 'Page');
-    if (target) target.classList.add('active');
+    if (target) {
+        target.classList.add('active');
+        console.log("已切换到页面:", pageName);
+    }
 };
 
-// ==================== 5. 启动自检 (放在最后执行) ====================
-// 确保所有变量都初始化完毕后再运行
+// ==================== 4. 辅助逻辑 ====================
+
+function startLoginDemo() {
+    const overlay = document.getElementById('demoOverlay');
+    if (overlay) overlay.classList.add('show');
+    
+    // 自动播放逻辑（可选）
+    document.getElementById('demoEmoji').textContent = "💩";
+    document.getElementById('demoText').textContent = "准备好解压了吗？";
+}
+
+// ==================== 5. 启动自检 ====================
 document.addEventListener('DOMContentLoaded', () => {
     console.log("BOSS KILL 系统加载完成");
+    
+    // 如果数据库连接报错，给出提示
     if (_supabaseClient) {
-        // 尝试进行一次简单的读取测试
-        _supabaseClient.from('buildings').select('*').limit(1).then(({data, error}) => {
-            if (error) console.error("数据库预连接失败:", error.message);
-            else console.log("数据库连接正常");
+        _supabaseClient.from('buildings').select('*').limit(1).then(({error}) => {
+            if (error) {
+                console.warn("数据库预连接失败 (TypeError: Failed to fetch)，请检查网络代理");
+            } else {
+                console.log("数据库连接成功");
+            }
         });
     }
 });
