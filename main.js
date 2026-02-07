@@ -1,5 +1,5 @@
-// ==================== 1. 全局状态 (必须放在最前面) ====================
-// 这样 handleLogin 才能找到 appState
+// ==================== 1. 最优先定义：全局状态 ====================
+// 必须放在最顶部，确保 handleLogin 等函数能找到它
 const appState = {
     isLoggedIn: false,
     isGuest: false,
@@ -14,35 +14,40 @@ const appState = {
     favoritedContents: new Set()
 };
 
-const motivationalQuotes = [
-    "在最好的青春里，在格子间里激励自己开出最美的花！",
-    "工作虽苦，但扔大便的快乐谁懂？",
-    "老板再坏，也挡不住你扔便便的决心！",
-    "每一坨便便，都是对996的无声抗议"
-];
-
-// ==================== 2. Supabase 初始化 ====================
+// ==================== 2. 初始化 Supabase ====================
 const supabaseUrl = 'https://rjqdxxwurocqsewvtdvf.supabase.co';
 const supabaseKey = 'sb_publishable_HDVosfE-j_H7Hogv79aq-A_NwrN0Xsd';
 
-// 检查库是否加载成功，避免 "Cannot access 'supabase'" 错误
-let _supabase;
-if (typeof supabase !== 'undefined') {
-    _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-} else {
-    console.error("Supabase SDK 未加载，请检查 index.html 是否引入了脚本");
+// 定义一个内部使用的变量名，避免与 SDK 冲突
+let _supabaseClient;
+
+try {
+    // 检查全局 supabase 对象是否存在（由 index.html 引入）
+    if (typeof supabase !== 'undefined') {
+        _supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    } else {
+        console.error("Supabase SDK 尚未加载，请检查 index.html 的 script 标签位置");
+    }
+} catch (err) {
+    console.error("Supabase 初始化失败:", err);
 }
 
-// ==================== 3. 核心功能函数 ====================
+// ==================== 3. 功能函数定义 ====================
+// 将函数挂载到 window，确保 HTML 里的 onclick 能找到它们
+
+// 登录逻辑
 window.handleLogin = async function() {
-    const emailInput = document.getElementById('loginEmail');
-    const passwordInput = document.getElementById('loginPassword');
+    const email = document.getElementById('loginEmail')?.value;
+    const password = document.getElementById('loginPassword')?.value;
     
-    if (!_supabase) return alert("系统初始化失败，请检查网络");
+    if (!email || !password) return alert("请输入邮箱和密码");
+    if (!_supabaseClient) return alert("数据库未连接");
+
+    console.log("尝试登录:", email);
     
-    const { data, error } = await _supabase.auth.signInWithPassword({
-        email: emailInput.value,
-        password: passwordInput.value
+    const { data, error } = await _supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
     });
 
     if (error) {
@@ -55,10 +60,12 @@ window.handleLogin = async function() {
     }
 };
 
+// 游客登录逻辑
 window.handleGuestLogin = function() {
+    console.log("以游客身份进入");
     appState.isLoggedIn = true;
     appState.isGuest = true;
-    appState.user = { name: "游客用户" };
+    appState.user = { id: 'guest', name: '游客' };
     startLoginDemo();
 };
 
@@ -66,8 +73,10 @@ window.handleGuestLogin = function() {
 function startLoginDemo() {
     const overlay = document.getElementById('demoOverlay');
     if (overlay) overlay.classList.add('show');
-    // 逻辑省略...
-    window.switchPage('swipe');
+    // 动画结束后跳转
+    setTimeout(() => {
+        window.switchPage('swipe');
+    }, 1000);
 }
 
 window.switchPage = function(pageName) {
@@ -76,14 +85,15 @@ window.switchPage = function(pageName) {
     if (target) target.classList.add('active');
 };
 
-// ==================== 5. 启动执行 (必须放在最后) ====================
-// 这样在调用时，前面的变量都已经定义好了
+// ==================== 5. 启动自检 (放在最后执行) ====================
+// 确保所有变量都初始化完毕后再运行
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("BOSS KILL 启动成功");
-    if (_supabase) {
-        // 测试连接
-        _supabase.from('buildings').select('*').limit(1).then(({error}) => {
-            if (!error) console.log("数据库连接正常");
+    console.log("BOSS KILL 系统加载完成");
+    if (_supabaseClient) {
+        // 尝试进行一次简单的读取测试
+        _supabaseClient.from('buildings').select('*').limit(1).then(({data, error}) => {
+            if (error) console.error("数据库预连接失败:", error.message);
+            else console.log("数据库连接正常");
         });
     }
 });
