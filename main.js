@@ -1,23 +1,28 @@
-// 1. 初始化 Supabase 客户端
-const supabaseUrl = 'https://rjqdxxwurocqsewvtdvf.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqcWR4eHd1cm9jcXNld3Z0ZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMTE5MDcsImV4cCI6MjA4NTc4NzkwN30.2RauWCLnayx_C1-0wTW6GDWcmFEX-u29EdX13OOkKeQ';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+// 不要用 const supabase，改个名字避免冲突
+const supabaseClient = supabase.createClient(
+    'https://rjqdxxwurocqsewvtdvf.supabase.co', 
+    'sb_publishable_HDVosfE-j_H7Hogv79aq-A_NwrN0Xsd'
+);
 
-// 2. 立即测试是否能读取建筑数据
-async function testDbConnection() {
-    console.log("正在尝试连接数据库...");
-    const { data, error } = await supabase
-        .from('buildings')
-        .select('*');
+// 必须定义 handleLogin 函数，否则按钮找不到它
+window.handleLogin = async function() {
+    const email = document.querySelector('input[type="email"]').value;
+    const password = document.querySelector('input[type="password"]').value;
+    
+    console.log("尝试登录:", email);
+    
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+    });
 
     if (error) {
-        console.error("❌ 连接失败:", error.message);
+        alert("登录失败: " + error.message);
     } else {
-        console.log("✅ 连接成功! 查找到建筑数量:", data.length);
-        console.log("数据内容:", data);
-        // 如果成功了，这里可以调用你原来的地图渲染函数
+        alert("登录成功！");
+        window.location.href = 'game.html'; // 跳转到游戏主界面
     }
-}
+};
 
 testDbConnection();
 // ==================== 全局状态 ====================
