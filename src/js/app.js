@@ -58,6 +58,10 @@ export async function initApp() {
         console.log("✅ 登录状态已恢复，可以直接使用应用");
     } else {
         console.log("ℹ️ 未发现有效会话，需要登录");
+        
+        // 恢复上次登录的邮箱
+        const { restoreLastLoginEmail } = await import('./auth.js');
+        restoreLastLoginEmail();
     }
 
     // 测试数据库连接
@@ -115,4 +119,13 @@ export async function initApp() {
 }
 
 // 页面加载完成后初始化应用
-document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', async () => {
+    await initApp();
+    
+    // 如果当前在登录页面，恢复上次登录的邮箱
+    const loginPage = document.getElementById('loginPage');
+    if (loginPage && loginPage.classList.contains('active')) {
+        const { restoreLastLoginEmail } = await import('./auth.js');
+        restoreLastLoginEmail();
+    }
+});

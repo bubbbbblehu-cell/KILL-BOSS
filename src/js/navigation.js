@@ -13,6 +13,15 @@ export function switchPage(pageName) {
         target.classList.add('active');
         console.log("已切换到页面:", pageName);
         
+        // 如果切换到登录页面，恢复上次登录的邮箱
+        if (pageName === 'login') {
+            setTimeout(() => {
+                if (window.restoreLastLoginEmail) {
+                    window.restoreLastLoginEmail();
+                }
+            }, 100);
+        }
+        
         // 触发页面激活事件
         window.dispatchEvent(new CustomEvent(`${pageName}PageActive`));
     }

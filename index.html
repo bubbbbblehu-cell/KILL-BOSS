@@ -47,7 +47,9 @@
                                            id="loginEmail" 
                                            placeholder="请输入邮箱" 
                                            autocomplete="email"
+                                           oninput="handleEmailInput(event)"
                                            onkeypress="if(event.key==='Enter' && document.getElementById('loginCodeInput') && document.getElementById('loginCodeInput').style.display !== 'none') handleLoginWithCode();">
+                                    <div class="email-suggestions" id="loginEmailSuggestionsList"></div>
                                 </div>
                             </div>
                             
@@ -86,7 +88,7 @@
                                            onkeypress="if(event.key==='Enter') handleRegister()"
                                            oninput="handleEmailInput(event)"
                                            onblur="handleEmailInput({target: document.getElementById('registerEmail')})">
-                                    <div class="email-suggestions" id="emailSuggestionsList"></div>
+                                    <div class="email-suggestions" id="registerEmailSuggestionsList"></div>
                                 </div>
                             </div>
                             <div class="form-group">

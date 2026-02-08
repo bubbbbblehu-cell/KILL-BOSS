@@ -73,16 +73,28 @@ export async function sendVerificationCode() {
                 error.message?.includes('rate limit') || 
                 error.message?.includes('too many') ||
                 error.message?.includes('email rate limit exceeded')) {
-                // 提取等待时间（如果有）
-                const match = error.message?.match(/(\d+)\s*(seconds?|秒|分钟|minutes?)/i);
+                // Supabase 默认限制：每小时每个邮箱最多发送一定数量的邮件
+                // 通常需要等待 1 小时，但我们设置一个合理的等待时间
+                waitSeconds = 3600; // 1小时 = 3600秒
+                
+                // 尝试从错误消息中提取等待时间（如果有）
+                const match = error.message?.match(/(\d+)\s*(seconds?|秒|分钟|minutes?|小时|hours?)/i);
                 if (match) {
                     waitSeconds = parseInt(match[1]);
                     if (match[2]?.toLowerCase().includes('minute') || match[2]?.includes('分钟')) {
                         waitSeconds *= 60;
+                    } else if (match[2]?.toLowerCase().includes('hour') || match[2]?.includes('小时')) {
+                        waitSeconds *= 3600;
                     }
                 }
                 
-                errorMsg = `发送过于频繁，请等待 ${waitSeconds} 秒后重试\n\n提示：\n1. 请检查邮箱是否正确\n2. 如果邮箱正确，请稍后再试\n3. 或尝试使用其他邮箱`;
+                const waitMinutes = Math.ceil(waitSeconds / 60);
+                const waitHours = Math.floor(waitSeconds / 3600);
+                const waitTimeText = waitHours > 0 
+                    ? `${waitHours} 小时` 
+                    : `${waitMinutes} 分钟`;
+                
+                errorMsg = `发送验证码过于频繁，请等待 ${waitTimeText} 后重试\n\n💡 解决方案：\n1. 等待 ${waitTimeText} 后重新发送\n2. 使用其他邮箱地址\n3. 在 Supabase Dashboard 中创建账号（不受限制）`;
                 showCountdown = true;
             } else if (error.message?.includes('Invalid email') || error.message?.includes('email')) {
                 errorMsg = "邮箱格式不正确，请检查后重试";
@@ -245,6 +257,9 @@ export async function handleLoginWithCode() {
             // 更新个人中心显示
             updateProfileDisplay();
             
+            // 记住登录邮箱
+            saveLastLoginEmail(email);
+            
             return true;
         }
     } catch (err) {
@@ -258,6 +273,59 @@ export async function handleLoginWithCode() {
             loginBtn.style.opacity = '1';
         }
         return false;
+    }
+}
+
+/**
+ * 保存上次登录的邮箱
+ */
+function saveLastLoginEmail(email) {
+    try {
+        if (email && email.trim()) {
+            localStorage.setItem('bossKill_lastLoginEmail', email.trim());
+            console.log("💾 已保存登录邮箱:", email);
+        }
+    } catch (err) {
+        console.warn("⚠️ 保存登录邮箱失败:", err);
+    }
+}
+
+/**
+ * 获取上次登录的邮箱
+ */
+function getLastLoginEmail() {
+    try {
+        const email = localStorage.getItem('bossKill_lastLoginEmail');
+        return email || '';
+    } catch (err) {
+        console.warn("⚠️ 读取登录邮箱失败:", err);
+        return '';
+    }
+}
+
+/**
+ * 清除保存的登录邮箱
+ */
+function clearLastLoginEmail() {
+    try {
+        localStorage.removeItem('bossKill_lastLoginEmail');
+        console.log("🗑️ 已清除保存的登录邮箱");
+    } catch (err) {
+        console.warn("⚠️ 清除登录邮箱失败:", err);
+    }
+}
+
+/**
+ * 恢复上次登录的邮箱到输入框
+ */
+export function restoreLastLoginEmail() {
+    const email = getLastLoginEmail();
+    if (email) {
+        const loginEmailInput = document.getElementById('loginEmail');
+        if (loginEmailInput) {
+            loginEmailInput.value = email;
+            console.log("📧 已恢复上次登录邮箱:", email);
+        }
     }
 }
 
@@ -292,16 +360,25 @@ function startErrorCountdown(button, seconds) {
     
     let countdown = seconds;
     button.disabled = true;
-    const originalText = button.textContent;
+    const originalText = button.textContent || '发送验证码';
+    
+    // 如果等待时间超过5分钟，使用分钟显示
+    const useMinutes = countdown > 300;
     
     const timer = setInterval(() => {
-        button.textContent = `请等待 ${countdown} 秒后重试`;
+        if (useMinutes) {
+            const minutes = Math.floor(countdown / 60);
+            const secs = countdown % 60;
+            button.textContent = `请等待 ${minutes}分${secs}秒后重试`;
+        } else {
+            button.textContent = `请等待 ${countdown} 秒后重试`;
+        }
         countdown--;
         
         if (countdown < 0) {
             clearInterval(timer);
             button.disabled = false;
-            button.textContent = originalText || '发送验证码';
+            button.textContent = originalText;
             button.style.opacity = '1';
         }
     }, 1000);
@@ -541,11 +618,26 @@ export async function handleLogout() {
     // 返回登录页面
     switchPage('login');
     
-    // 清空登录表单
-    const emailInput = document.getElementById('loginEmail');
-    const passwordInput = document.getElementById('loginPassword');
-    if (emailInput) emailInput.value = '';
-    if (passwordInput) passwordInput.value = '';
+    // 恢复上次登录的邮箱（不清空，方便下次登录）
+    restoreLastLoginEmail();
+    
+    // 清空验证码输入框（如果有）
+    const codeInput = document.getElementById('loginCode');
+    if (codeInput) codeInput.value = '';
+    
+    // 隐藏验证码输入框
+    const codeInputContainer = document.getElementById('loginCodeInput');
+    const sendBtn = document.getElementById('sendCodeBtn');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    if (codeInputContainer) codeInputContainer.style.display = 'none';
+    if (sendBtn) {
+        sendBtn.style.display = 'block';
+        sendBtn.disabled = false;
+        sendBtn.textContent = '发送验证码';
+        sendBtn.style.opacity = '1';
+    }
+    if (loginBtn) loginBtn.style.display = 'none';
 }
 
 // showToast 已从 utils.js 导入
@@ -633,6 +725,7 @@ window.sendVerificationCode = sendVerificationCode;
 window.handleLoginWithCode = async function() {
     await handleLoginWithCode();
 };
+window.restoreLastLoginEmail = restoreLastLoginEmail;
 
 window.handleRegister = async function() {
     const email = document.getElementById('registerEmail')?.value?.trim();
@@ -759,7 +852,18 @@ let emailInputDebounceTimer = null;
 window.handleEmailInput = function(event) {
     const input = event.target;
     const value = input.value.trim();
-    const suggestionsList = document.getElementById('emailSuggestionsList');
+    
+    // 根据输入框ID确定使用哪个建议列表
+    const inputId = input.id;
+    let suggestionsList;
+    
+    if (inputId === 'loginEmail') {
+        suggestionsList = document.getElementById('loginEmailSuggestionsList');
+    } else if (inputId === 'registerEmail') {
+        suggestionsList = document.getElementById('registerEmailSuggestionsList');
+    } else {
+        return;
+    }
     
     if (!suggestionsList) return;
     
@@ -772,52 +876,53 @@ window.handleEmailInput = function(event) {
     emailInputDebounceTimer = setTimeout(() => {
         // 如果输入包含 @，显示建议
         if (value.includes('@')) {
-        const atIndex = value.lastIndexOf('@');
-        const localPart = value.substring(0, atIndex);
-        const domain = value.substring(atIndex + 1);
-        
-        // 如果本地部分为空，不显示建议
-        if (!localPart) {
-            suggestionsList.style.display = 'none';
-            return;
-        }
-        
-        // 如果域名部分为空或很短，显示建议
-        if (!domain || domain.length < 2) {
-            const suggestions = ['gmail.com', 'outlook.com', '163.com', 'qq.com'];
-            suggestionsList.innerHTML = '';
-            suggestionsList.style.display = 'block';
+            const atIndex = value.lastIndexOf('@');
+            const localPart = value.substring(0, atIndex);
+            const domain = value.substring(atIndex + 1);
             
-            suggestions.forEach(suggestion => {
-                // 如果用户已经开始输入域名，进行过滤匹配
-                if (domain && !suggestion.toLowerCase().startsWith(domain.toLowerCase())) {
-                    return;
-                }
+            // 如果本地部分为空，不显示建议
+            if (!localPart) {
+                suggestionsList.style.display = 'none';
+                return;
+            }
+            
+            // 如果域名部分为空或很短，显示建议
+            if (!domain || domain.length < 2) {
+                const suggestions = ['gmail.com', 'outlook.com', '163.com', 'qq.com'];
+                suggestionsList.innerHTML = '';
+                suggestionsList.style.display = 'block';
                 
-                const item = document.createElement('div');
-                item.className = 'email-suggestion-item';
-                item.innerHTML = `
-                    <span class="suggestion-email">${localPart}@<strong>${suggestion}</strong></span>
-                `;
-                item.onclick = () => {
-                    input.value = `${localPart}@${suggestion}`;
+                suggestions.forEach(suggestion => {
+                    // 如果用户已经开始输入域名，进行过滤匹配
+                    if (domain && !suggestion.toLowerCase().startsWith(domain.toLowerCase())) {
+                        return;
+                    }
+                    
+                    const item = document.createElement('div');
+                    item.className = 'email-suggestion-item';
+                    item.innerHTML = `
+                        <span class="suggestion-email">${localPart}@<strong>${suggestion}</strong></span>
+                    `;
+                    item.onclick = () => {
+                        input.value = `${localPart}@${suggestion}`;
+                        suggestionsList.style.display = 'none';
+                        input.focus();
+                        // 触发 input 事件，确保验证正常工作
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    };
+                    suggestionsList.appendChild(item);
+                });
+                
+                // 如果没有匹配的建议，隐藏列表
+                if (suggestionsList.children.length === 0) {
                     suggestionsList.style.display = 'none';
-                    input.focus();
-                    // 触发 input 事件，确保验证正常工作
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                };
-                suggestionsList.appendChild(item);
-            });
-            
-            // 如果没有匹配的建议，隐藏列表
-            if (suggestionsList.children.length === 0) {
+                }
+            } else {
+                // 如果域名已经完整，隐藏建议
                 suggestionsList.style.display = 'none';
             }
         } else {
-            // 如果域名已经完整，隐藏建议
-            suggestionsList.style.display = 'none';
-        }
-        } else {
+            // 如果没有 @，隐藏建议
             suggestionsList.style.display = 'none';
         }
     }, 300); // 300ms 防抖延迟
@@ -825,13 +930,24 @@ window.handleEmailInput = function(event) {
 
 // 点击外部时关闭建议列表
 document.addEventListener('click', function(event) {
-    const emailInput = document.getElementById('registerEmail');
-    const suggestionsList = document.getElementById('emailSuggestionsList');
+    // 登录邮箱建议列表
+    const loginEmailInput = document.getElementById('loginEmail');
+    const loginSuggestionsList = document.getElementById('loginEmailSuggestionsList');
     
-    if (emailInput && suggestionsList && 
-        !emailInput.contains(event.target) && 
-        !suggestionsList.contains(event.target)) {
-        suggestionsList.style.display = 'none';
+    if (loginEmailInput && loginSuggestionsList && 
+        !loginEmailInput.contains(event.target) && 
+        !loginSuggestionsList.contains(event.target)) {
+        loginSuggestionsList.style.display = 'none';
+    }
+    
+    // 注册邮箱建议列表
+    const registerEmailInput = document.getElementById('registerEmail');
+    const registerSuggestionsList = document.getElementById('registerEmailSuggestionsList');
+    
+    if (registerEmailInput && registerSuggestionsList && 
+        !registerEmailInput.contains(event.target) && 
+        !registerSuggestionsList.contains(event.target)) {
+        registerSuggestionsList.style.display = 'none';
     }
 });
 
