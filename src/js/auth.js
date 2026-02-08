@@ -9,13 +9,14 @@ import { startLoginDemo, showToast } from './utils.js';
 import { switchPage } from './navigation.js';
 
 /**
- * 用户登录
+ * 发送验证码
  */
-export async function handleLogin(email, password) {
+export async function sendVerificationCode() {
+    const email = document.getElementById('loginEmail')?.value?.trim();
+    
     // 输入验证
-    if (!email || !password) {
-        showToast("请输入邮箱和密码", 'error');
-        console.warn("⚠️ 登录失败: 邮箱或密码为空");
+    if (!email) {
+        showToast("请输入邮箱地址", 'error');
         return false;
     }
     
@@ -26,42 +27,169 @@ export async function handleLogin(email, password) {
         return false;
     }
 
-    console.log("🔐 ========== 开始登录 ==========");
+    console.log("📧 ========== 发送验证码 ==========");
     console.log("📧 邮箱:", email);
-    console.log("🔑 密码:", "*".repeat(password.length));
 
     const client = getSupabaseClient();
     if (!client) {
         const errorMsg = "网络连接异常，Supabase 未就绪。请检查：1) 是否已引入 Supabase 脚本 2) 科学上网环境 3) 控制台具体报错";
-        alert(errorMsg);
+        showToast(errorMsg, 'error', 5000);
         console.error("❌", errorMsg);
         return false;
     }
 
+    // 设置按钮加载状态
+    const sendBtn = document.getElementById('sendCodeBtn');
+    const originalText = sendBtn?.textContent;
+    
+    if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.textContent = '发送中...';
+        sendBtn.style.opacity = '0.7';
+    }
+
     try {
-        console.log("⏳ 正在发送登录请求...");
-        const { data, error } = await client.auth.signInWithPassword({
+        console.log("⏳ 正在发送验证码...");
+        const { data, error } = await client.auth.signInWithOtp({
             email: email,
-            password: password
+            options: {
+                shouldCreateUser: true, // 如果用户不存在，自动创建
+                emailRedirectTo: window.location.origin
+            }
         });
 
         if (error) {
-            console.error("❌ 登录失败");
+            console.error("❌ 发送验证码失败");
             console.error("错误代码:", error.status || error.code);
             console.error("错误消息:", error.message);
             console.error("完整错误:", error);
             
-            // 友好的错误提示
-            let errorMsg = "登录失败: " + error.message;
-            if (error.message?.includes('Invalid login credentials')) {
-                errorMsg = "邮箱或密码错误，请检查后重试";
-            } else if (error.message?.includes('Email not confirmed')) {
-                errorMsg = "请先验证邮箱，检查收件箱中的确认邮件";
+            let errorMsg = "发送验证码失败: " + error.message;
+            if (error.message?.includes('rate limit') || error.message?.includes('too many')) {
+                errorMsg = "发送过于频繁，请稍后再试";
             }
             
-            // 使用 Toast 显示错误，而不是 alert
             showToast(errorMsg, 'error');
-            console.log("🔐 ========== 登录失败 ==========");
+            console.log("📧 ========== 发送失败 ==========");
+            
+            // 恢复按钮状态
+            if (sendBtn) {
+                sendBtn.disabled = false;
+                sendBtn.textContent = originalText || '发送验证码';
+                sendBtn.style.opacity = '1';
+            }
+            return false;
+        } else {
+            console.log("✅ 验证码已发送！");
+            console.log("📧 请检查邮箱:", email);
+            
+            showToast("验证码已发送至邮箱，请查收", 'success');
+            
+            // 显示验证码输入框
+            const codeInput = document.getElementById('loginCodeInput');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            if (codeInput) codeInput.style.display = 'block';
+            if (sendBtn) sendBtn.style.display = 'none';
+            if (loginBtn) loginBtn.style.display = 'block';
+            
+            // 聚焦到验证码输入框
+            setTimeout(() => {
+                document.getElementById('loginCode')?.focus();
+            }, 300);
+            
+            // 开始倒计时
+            startCodeCountdown();
+            
+            console.log("📧 ========== 发送完成 ==========");
+            return true;
+        }
+    } catch (err) {
+        console.error("❌ 发送验证码过程发生异常:", err);
+        showToast("发送验证码时发生错误，请稍后重试", 'error');
+        
+        // 恢复按钮状态
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.textContent = originalText || '发送验证码';
+            sendBtn.style.opacity = '1';
+        }
+        return false;
+    }
+}
+
+/**
+ * 使用验证码登录
+ */
+export async function handleLoginWithCode() {
+    const email = document.getElementById('loginEmail')?.value?.trim();
+    const code = document.getElementById('loginCode')?.value?.trim();
+    
+    // 输入验证
+    if (!email) {
+        showToast("请输入邮箱地址", 'error');
+        return false;
+    }
+    
+    if (!code) {
+        showToast("请输入验证码", 'error');
+        return false;
+    }
+    
+    if (code.length !== 6) {
+        showToast("验证码为6位数字", 'error');
+        return false;
+    }
+
+    console.log("🔐 ========== 验证码登录 ==========");
+    console.log("📧 邮箱:", email);
+    console.log("🔢 验证码:", code);
+
+    const client = getSupabaseClient();
+    if (!client) {
+        const errorMsg = "网络连接异常，Supabase 未就绪";
+        showToast(errorMsg, 'error', 5000);
+        return false;
+    }
+
+    // 设置按钮加载状态
+    const loginBtn = document.getElementById('loginBtn');
+    const originalText = loginBtn?.textContent;
+    
+    if (loginBtn) {
+        loginBtn.disabled = true;
+        loginBtn.textContent = '验证中...';
+        loginBtn.style.opacity = '0.7';
+    }
+
+    try {
+        console.log("⏳ 正在验证...");
+        const { data, error } = await client.auth.verifyOtp({
+            email: email,
+            token: code,
+            type: 'email'
+        });
+
+        if (error) {
+            console.error("❌ 验证失败");
+            console.error("错误代码:", error.status || error.code);
+            console.error("错误消息:", error.message);
+            console.error("完整错误:", error);
+            
+            let errorMsg = "验证失败: " + error.message;
+            if (error.message?.includes('Invalid') || error.message?.includes('expired')) {
+                errorMsg = "验证码错误或已过期，请重新获取";
+            }
+            
+            showToast(errorMsg, 'error');
+            console.log("🔐 ========== 验证失败 ==========");
+            
+            // 恢复按钮状态
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.textContent = originalText || '登 录';
+                loginBtn.style.opacity = '1';
+            }
             return false;
         } else {
             console.log("✅ 登录成功！");
@@ -69,10 +197,6 @@ export async function handleLogin(email, password) {
                 id: data.user.id,
                 email: data.user.email,
                 created_at: data.user.created_at
-            });
-            console.log("会话信息:", {
-                access_token: data.session?.access_token?.substring(0, 20) + '...',
-                expires_at: data.session?.expires_at
             });
             
             // 更新应用状态
@@ -97,10 +221,50 @@ export async function handleLogin(email, password) {
             return true;
         }
     } catch (err) {
-        console.error("❌ 登录过程发生异常:", err);
-        showToast("登录时发生错误，请稍后重试", 'error');
+        console.error("❌ 验证过程发生异常:", err);
+        showToast("验证时发生错误，请稍后重试", 'error');
+        
+        // 恢复按钮状态
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.textContent = originalText || '登 录';
+            loginBtn.style.opacity = '1';
+        }
         return false;
     }
+}
+
+/**
+ * 开始验证码发送倒计时
+ */
+function startCodeCountdown() {
+    const sendBtn = document.getElementById('sendCodeBtn');
+    if (!sendBtn) return;
+    
+    let countdown = 60;
+    sendBtn.disabled = true;
+    
+    const timer = setInterval(() => {
+        sendBtn.textContent = `重新发送(${countdown}秒)`;
+        countdown--;
+        
+        if (countdown < 0) {
+            clearInterval(timer);
+            sendBtn.disabled = false;
+            sendBtn.textContent = '重新发送验证码';
+            sendBtn.style.opacity = '1';
+        }
+    }, 1000);
+}
+
+/**
+ * 用户登录（保留用于兼容性，但已改为验证码登录）
+ * @deprecated 使用 handleLoginWithCode 代替
+ */
+export async function handleLogin(email, password) {
+    // 此函数已废弃，保留用于兼容性
+    console.warn("⚠️ handleLogin 已废弃，请使用验证码登录");
+    return false;
 }
 
 /**
@@ -145,6 +309,9 @@ export async function handleRegister(email, password) {
         return false;
     }
 
+    // 注意：Supabase 为了安全，不会暴露邮箱是否存在的信息（防止邮箱枚举攻击）
+    // 所以我们需要在注册后根据返回结果来判断
+
     try {
         console.log("⏳ 正在发送注册请求...");
         const { data, error } = await client.auth.signUp({
@@ -165,15 +332,23 @@ export async function handleRegister(email, password) {
             let errorMsg = "注册失败: " + error.message;
             let showLoginButton = false;
             
-            if (error.message?.includes('already registered') || 
-                error.message?.includes('already exists') ||
-                error.message?.includes('User already registered') ||
-                error.status === 422) {
+            // 检查各种可能的"已注册"错误情况
+            const errorMessage = error.message?.toLowerCase() || '';
+            const errorCode = error.code || error.status;
+            
+            if (errorMessage.includes('already registered') || 
+                errorMessage.includes('already exists') ||
+                errorMessage.includes('user already registered') ||
+                errorMessage.includes('email address is already registered') ||
+                errorCode === 422 ||
+                errorCode === 'user_already_registered') {
                 errorMsg = "该邮箱已被注册，请直接登录";
                 showLoginButton = true;
-            } else if (error.message?.includes('Password')) {
+            } else if (errorMessage.includes('password')) {
                 errorMsg = "密码不符合要求，请使用至少6位字符";
-            } else if (error.message?.includes('security purposes') || error.message?.includes('after') || error.message?.includes('seconds')) {
+            } else if (errorMessage.includes('security purposes') || 
+                       errorMessage.includes('after') || 
+                       errorMessage.includes('seconds')) {
                 // 提取等待时间
                 const match = error.message.match(/(\d+)\s*seconds?/i);
                 const seconds = match ? match[1] : '60';
@@ -196,21 +371,62 @@ export async function handleRegister(email, password) {
             console.log("📝 ========== 注册失败 ==========");
             return false;
         } else {
-            console.log("✅ 注册成功！");
-            console.log("用户信息:", {
-                id: data.user?.id,
-                email: data.user?.email,
-                created_at: data.user?.created_at
+            // 检查返回的数据，判断是否真的注册成功
+            // 如果 user 存在但没有 session，可能是邮箱验证模式
+            // 如果 user 不存在，可能是邮箱已存在但 Supabase 没有返回错误
+            
+            console.log("📝 注册响应:", {
+                hasUser: !!data.user,
+                hasSession: !!data.session,
+                userEmail: data.user?.email
             });
             
-            // 检查是否需要邮箱验证
+            // 如果返回了用户但没有 session，需要邮箱验证
             if (data.user && !data.session) {
-                showToast("注册成功！请检查邮箱并点击确认链接以完成注册。", 'info', 5000);
-                console.log("📧 需要邮箱验证，已发送确认邮件");
-                console.log("📝 ========== 注册完成 ==========");
+                // 检查这是新注册还是已存在的用户
+                // 如果用户创建时间很近（比如1分钟内），可能是新注册
+                const userCreatedAt = new Date(data.user.created_at);
+                const now = new Date();
+                const diffMinutes = (now - userCreatedAt) / (1000 * 60);
+                
+                if (diffMinutes < 1) {
+                    // 新注册，需要邮箱验证
+                    showToast("注册成功！请检查邮箱并点击确认链接以完成注册。", 'info', 5000);
+                    console.log("📧 需要邮箱验证，已发送确认邮件");
+                    console.log("📝 ========== 注册完成 ==========");
+                    return false;
+                } else {
+                    // 用户已存在，但 Supabase 没有返回错误（可能是安全策略）
+                    console.warn("⚠️ 用户可能已存在，但 Supabase 返回了成功响应");
+                    showToast("该邮箱可能已注册，请尝试直接登录", 'error', 5000);
+                    setTimeout(() => {
+                        const email = document.getElementById('registerEmail')?.value;
+                        if (email) {
+                            showEmailExistsPrompt(email);
+                        }
+                    }, 500);
+                    return false;
+                }
+            } else if (!data.user) {
+                // 没有返回用户，可能是邮箱已存在
+                console.warn("⚠️ 注册响应中没有用户信息，邮箱可能已存在");
+                showToast("该邮箱可能已注册，请尝试直接登录", 'error', 5000);
+                setTimeout(() => {
+                    const email = document.getElementById('registerEmail')?.value;
+                    if (email) {
+                        showEmailExistsPrompt(email);
+                    }
+                }, 500);
                 return false;
             } else {
-                // 自动登录
+                // 自动登录成功
+                console.log("✅ 注册成功！");
+                console.log("用户信息:", {
+                    id: data.user.id,
+                    email: data.user.email,
+                    created_at: data.user.created_at
+                });
+                
                 updateUser({
                     id: data.user.id,
                     email: data.user.email,
@@ -363,22 +579,9 @@ export function setupAuthListener() {
 }
 
 // 导出到 window 对象，供 HTML 调用
-window.handleLogin = async function() {
-    const email = document.getElementById('loginEmail')?.value?.trim();
-    const password = document.getElementById('loginPassword')?.value;
-    
-    // 设置加载状态
-    setLoginButtonLoading(true);
-    
-    try {
-        const success = await handleLogin(email, password);
-        if (!success) {
-            // 登录失败，保持表单状态
-        }
-    } finally {
-        // 恢复按钮状态
-        setLoginButtonLoading(false);
-    }
+window.sendVerificationCode = sendVerificationCode;
+window.handleLoginWithCode = async function() {
+    await handleLoginWithCode();
 };
 
 window.handleRegister = async function() {

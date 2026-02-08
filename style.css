@@ -355,6 +355,26 @@ body {
     min-width: 100px;
 }
 
+/* 验证码输入框 */
+.code-input-wrapper {
+    position: relative;
+}
+
+.code-input {
+    text-align: center;
+    font-size: 24px;
+    letter-spacing: 8px;
+    font-weight: 600;
+    padding: 15px;
+}
+
+.code-hint {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
 .btn {
     width: 100%;
     padding: 16px;
