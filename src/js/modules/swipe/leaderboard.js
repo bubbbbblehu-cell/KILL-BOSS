@@ -12,8 +12,9 @@ let currentLeaderboardType = 'today'; // today, week, month, year
  */
 export async function initLeaderboard() {
     console.log("🏆 初始化榜单...");
-    await loadLeaderboard('today');
     setupLeaderboardTabs();
+    await loadLeaderboard('today');
+    updateLeaderboardTitle('today');
 }
 
 /**
@@ -40,6 +41,9 @@ export async function switchLeaderboard(type) {
     document.querySelectorAll('.leaderboard-tab').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.type === type);
     });
+    
+    // 更新标题
+    updateLeaderboardTitle(type);
     
     // 加载对应榜单数据
     await loadLeaderboard(type);
@@ -130,14 +134,24 @@ function renderLeaderboard(container, posts) {
         return;
     }
 
+    const medals = ['🥇', '🥈', '🥉'];
+    
     container.innerHTML = posts.map((post, index) => `
-        <div class="leaderboard-item" data-post-id="${post.id}">
-            <div class="leaderboard-rank">${index + 1}</div>
+        <div class="leaderboard-item" data-post-id="${post.id}" onclick="viewPost(${post.id})">
+            <div class="leaderboard-rank">
+                ${index < 3 ? medals[index] : `<span class="rank-number">${index + 1}</span>`}
+            </div>
             <div class="leaderboard-content">
-                <div class="leaderboard-author">${post.user?.name || '匿名用户'}</div>
-                <div class="leaderboard-stats">
-                    <span>👍 ${post.likes_count || 0}</span>
-                    <span>💬 ${post.comments_count || 0}</span>
+                <div class="leaderboard-preview">
+                    ${post.image_url ? `<img src="${post.image_url}" alt="帖子预览" class="leaderboard-image">` : ''}
+                    ${post.text_content ? `<p class="leaderboard-text">${post.text_content.substring(0, 30)}${post.text_content.length > 30 ? '...' : ''}</p>` : ''}
+                </div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-author">${post.user?.name || '匿名用户'}</div>
+                    <div class="leaderboard-stats">
+                        <span class="stat-item">👍 ${post.likes_count || 0}</span>
+                        <span class="stat-item">💬 ${post.comments_count || 0}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -186,6 +200,15 @@ function getMockLeaderboard() {
         }
     ];
 }
+
+/**
+ * 查看帖子详情
+ */
+window.viewPost = function(postId) {
+    console.log("查看帖子:", postId);
+    // TODO: 实现帖子详情页
+    // 可以跳转到帖子详情或显示弹窗
+};
 
 // 导出到 window
 window.switchLeaderboard = switchLeaderboard;

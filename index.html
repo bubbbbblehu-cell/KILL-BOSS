@@ -53,14 +53,28 @@
 
                 <!-- 首页/滑一滑 -->
                 <div class="page swipe-page" id="swipePage">
+                    <!-- 榜单区域 -->
                     <div class="banner-section">
-                        <div class="banner-title">🔥 Top3 热门作品</div>
+                        <div class="banner-header">
+                            <div class="banner-title" id="bannerTitle">🔥 今日榜单</div>
+                            <div class="leaderboard-tabs">
+                                <button class="leaderboard-tab active" data-type="today" onclick="switchLeaderboard('today')">今日</button>
+                                <button class="leaderboard-tab" data-type="week" onclick="switchLeaderboard('week')">周榜</button>
+                                <button class="leaderboard-tab" data-type="month" onclick="switchLeaderboard('month')">月榜</button>
+                                <button class="leaderboard-tab" data-type="year" onclick="switchLeaderboard('year')">年榜</button>
+                            </div>
+                        </div>
                         <div class="banner-scroll" id="bannerScroll">
-                            <!-- 动态生成 -->
+                            <div class="loading-leaderboard">加载中...</div>
                         </div>
                     </div>
-                    <div class="content-feed" id="contentFeed">
-                        <!-- 动态生成 -->
+                    
+                    <!-- 滑动Feed区域 -->
+                    <div class="swipe-container">
+                        <div class="swipe-hint">👈 左滑不喜欢 | 右滑喜欢 👉</div>
+                        <div class="content-feed" id="contentFeed">
+                            <div class="loading-posts">加载中...</div>
+                        </div>
                     </div>
                     <div class="bottom-nav">
                         <div class="nav-item active" onclick="switchPage('swipe')">

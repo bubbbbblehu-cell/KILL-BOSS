@@ -14,9 +14,9 @@ let posts = [];
  */
 export async function initSwipeFeed() {
     console.log("📱 初始化滑动Feed...");
+    currentPostIndex = 0; // 重置索引
     await loadPosts();
     renderPosts();
-    setupSwipeHandlers();
 }
 
 /**
@@ -33,9 +33,12 @@ async function loadPosts() {
     try {
         const { data, error } = await client
             .from('posts')
-            .select('*')
+            .select(`
+                *,
+                user:users(id, name)
+            `)
             .order('created_at', { ascending: false })
-            .limit(20);
+            .limit(50);
 
         if (error) {
             console.error("❌ 加载帖子失败:", error);
@@ -51,7 +54,7 @@ async function loadPosts() {
 }
 
 /**
- * 渲染帖子列表
+ * 渲染帖子列表（卡片式，一次显示一个）
  */
 function renderPosts() {
     const feedContainer = document.getElementById('contentFeed');
@@ -59,14 +62,21 @@ function renderPosts() {
 
     feedContainer.innerHTML = '';
 
-    posts.forEach((post, index) => {
-        const postElement = createPostElement(post, index);
-        feedContainer.appendChild(postElement);
-    });
+    if (posts.length === 0) {
+        feedContainer.innerHTML = '<div class="no-posts">暂无帖子，快去发一个吧~</div>';
+        return;
+    }
+
+    // 只显示第一个帖子（卡片式）
+    const postElement = createPostElement(posts[0], 0);
+    feedContainer.appendChild(postElement);
+    
+    // 设置滑动处理
+    setupSwipeHandlers();
 }
 
 /**
- * 创建帖子元素
+ * 创建帖子元素（卡片式）
  */
 function createPostElement(post, index) {
     const div = document.createElement('div');
@@ -77,12 +87,14 @@ function createPostElement(post, index) {
     div.innerHTML = `
         <div class="post-content">
             <div class="post-header">
-                <span class="post-author">${post.user_name || '匿名用户'}</span>
-                <span class="post-time">${formatTime(post.created_at)}</span>
+                <div class="post-author-info">
+                    <span class="post-author">${post.user_name || post.user?.name || '匿名用户'}</span>
+                    <span class="post-time">${formatTime(post.created_at)}</span>
+                </div>
             </div>
             <div class="post-body">
                 ${post.text_content ? `<p class="post-text">${post.text_content}</p>` : ''}
-                ${post.image_url ? `<img src="${post.image_url}" alt="帖子图片" class="post-image">` : ''}
+                ${post.image_url ? `<img src="${post.image_url}" alt="帖子图片" class="post-image" loading="lazy">` : ''}
             </div>
             <div class="post-footer">
                 <button class="post-action like-btn" onclick="handleLike(${post.id})">
@@ -99,60 +111,133 @@ function createPostElement(post, index) {
 }
 
 /**
- * 设置滑动处理
+ * 设置滑动处理（支持触摸和鼠标）
  */
 function setupSwipeHandlers() {
-    const posts = document.querySelectorAll('.swipe-post');
+    const post = document.querySelector('.swipe-post');
+    if (!post) return;
     
-    posts.forEach(post => {
-        let startX = 0;
-        let startY = 0;
-        let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let isDragging = false;
+    let swipeDirection = null; // 'like' or 'dislike'
 
-        post.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            isDragging = true;
-        });
+    // 触摸事件（移动端）
+    post.addEventListener('touchstart', handleStart, { passive: true });
+    post.addEventListener('touchmove', handleMove, { passive: true });
+    post.addEventListener('touchend', handleEnd);
 
-        post.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
+    // 鼠标事件（桌面端）
+    post.addEventListener('mousedown', handleStart);
+    post.addEventListener('mousemove', handleMove);
+    post.addEventListener('mouseup', handleEnd);
+    post.addEventListener('mouseleave', handleEnd);
+
+    function handleStart(e) {
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        startX = clientX;
+        startY = clientY;
+        currentX = clientX;
+        isDragging = true;
+        post.style.transition = 'none';
+        
+        // 添加拖拽样式
+        post.classList.add('dragging');
+    }
+
+    function handleMove(e) {
+        if (!isDragging) return;
+        
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const diffX = clientX - startX;
+        const diffY = clientY - startY;
+
+        // 只处理水平滑动（水平距离大于垂直距离）
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+            e.preventDefault();
+            currentX = clientX;
             
-            const currentX = e.touches[0].clientX;
-            const currentY = e.touches[0].clientY;
-            const diffX = currentX - startX;
-            const diffY = currentY - startY;
-
-            // 只处理水平滑动
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                post.style.transform = `translateX(${diffX}px) rotate(${diffX * 0.1}deg)`;
-                post.style.opacity = 1 - Math.abs(diffX) / 300;
-            }
-        });
-
-        post.addEventListener('touchend', (e) => {
-            if (!isDragging) return;
-            isDragging = false;
-
-            const endX = e.changedTouches[0].clientX;
-            const diffX = endX - startX;
-
-            // 滑动阈值：100px
-            if (Math.abs(diffX) > 100) {
-                if (diffX > 0) {
-                    // 右滑 = 喜欢
-                    handleSwipeRight(post);
-                } else {
-                    // 左滑 = 不喜欢
-                    handleSwipeLeft(post);
-                }
+            const rotate = diffX * 0.1;
+            const opacity = 1 - Math.abs(diffX) / 300;
+            
+            post.style.transform = `translateX(${diffX}px) rotate(${rotate}deg)`;
+            post.style.opacity = Math.max(opacity, 0.3);
+            
+            // 显示提示
+            if (diffX > 50) {
+                swipeDirection = 'like';
+                showSwipeHint(post, 'like');
+            } else if (diffX < -50) {
+                swipeDirection = 'dislike';
+                showSwipeHint(post, 'dislike');
             } else {
-                // 恢复原位置
-                post.style.transform = '';
-                post.style.opacity = '';
+                swipeDirection = null;
+                hideSwipeHint(post);
             }
-        });
-    });
+        }
+    }
+
+    function handleEnd(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        post.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        post.classList.remove('dragging');
+        
+        const endX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+        const diffX = endX - startX;
+
+        // 滑动阈值：100px
+        if (Math.abs(diffX) > 100) {
+            if (diffX > 0) {
+                // 右滑 = 喜欢
+                handleSwipeRight(post);
+            } else {
+                // 左滑 = 不喜欢
+                handleSwipeLeft(post);
+            }
+        } else {
+            // 恢复原位置
+            post.style.transform = '';
+            post.style.opacity = '';
+            hideSwipeHint(post);
+        }
+        
+        swipeDirection = null;
+    }
+}
+
+/**
+ * 显示滑动提示
+ */
+function showSwipeHint(postElement, direction) {
+    let hint = postElement.querySelector('.swipe-hint');
+    if (!hint) {
+        hint = document.createElement('div');
+        hint.className = 'swipe-hint';
+        postElement.appendChild(hint);
+    }
+    
+    if (direction === 'like') {
+        hint.textContent = '👍 喜欢';
+        hint.className = 'swipe-hint swipe-hint-like';
+    } else {
+        hint.textContent = '👎 不喜欢';
+        hint.className = 'swipe-hint swipe-hint-dislike';
+    }
+}
+
+/**
+ * 隐藏滑动提示
+ */
+function hideSwipeHint(postElement) {
+    const hint = postElement.querySelector('.swipe-hint');
+    if (hint) {
+        hint.remove();
+    }
 }
 
 /**
@@ -165,6 +250,9 @@ async function handleSwipeRight(postElement) {
     // 添加点赞
     await toggleLike(postId, true);
     
+    // 显示喜欢动画
+    showSwipeAnimation(postElement, 'like');
+    
     // 动画移除
     postElement.style.transform = 'translateX(100vw) rotate(30deg)';
     postElement.style.opacity = '0';
@@ -172,6 +260,7 @@ async function handleSwipeRight(postElement) {
     setTimeout(() => {
         postElement.remove();
         currentPostIndex++;
+        loadNextPost();
     }, 300);
 }
 
@@ -182,6 +271,9 @@ function handleSwipeLeft(postElement) {
     const postId = postElement.dataset.postId;
     console.log("👈 左滑 - 不喜欢帖子:", postId);
     
+    // 显示不喜欢动画
+    showSwipeAnimation(postElement, 'dislike');
+    
     // 动画移除
     postElement.style.transform = 'translateX(-100vw) rotate(-30deg)';
     postElement.style.opacity = '0';
@@ -189,7 +281,46 @@ function handleSwipeLeft(postElement) {
     setTimeout(() => {
         postElement.remove();
         currentPostIndex++;
+        loadNextPost();
     }, 300);
+}
+
+/**
+ * 显示滑动动画
+ */
+function showSwipeAnimation(postElement, direction) {
+    const animation = document.createElement('div');
+    animation.className = `swipe-animation swipe-animation-${direction}`;
+    animation.textContent = direction === 'like' ? '👍' : '👎';
+    postElement.appendChild(animation);
+    
+    setTimeout(() => {
+        animation.remove();
+    }, 500);
+}
+
+/**
+ * 加载下一个帖子
+ */
+function loadNextPost() {
+    currentPostIndex++;
+    
+    if (currentPostIndex >= posts.length) {
+        // 没有更多帖子了
+        const feedContainer = document.getElementById('contentFeed');
+        if (feedContainer) {
+            feedContainer.innerHTML = '<div class="no-more-posts">没有更多帖子了~</div>';
+        }
+        return;
+    }
+    
+    // 渲染下一个帖子
+    const feedContainer = document.getElementById('contentFeed');
+    if (feedContainer && posts[currentPostIndex]) {
+        const postElement = createPostElement(posts[currentPostIndex], currentPostIndex);
+        feedContainer.appendChild(postElement);
+        setupSwipeHandlers();
+    }
 }
 
 /**

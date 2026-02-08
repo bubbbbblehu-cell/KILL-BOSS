@@ -12,6 +12,9 @@ export function switchPage(pageName) {
     if (target) {
         target.classList.add('active');
         console.log("已切换到页面:", pageName);
+        
+        // 触发页面激活事件
+        window.dispatchEvent(new CustomEvent(`${pageName}PageActive`));
     }
 }
 

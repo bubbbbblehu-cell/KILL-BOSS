@@ -15,6 +15,7 @@ import './app.js';
 
 // 导入功能模块
 // 划一划发帖模块
+import './modules/swipe/index.js';
 import './modules/swipe/swipeFeed.js';
 import './modules/swipe/comments.js';
 import './modules/swipe/leaderboard.js';
