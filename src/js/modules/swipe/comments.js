@@ -41,9 +41,11 @@ function createCommentsModal(postId) {
                 <input type="text" 
                        id="commentInput-${postId}" 
                        placeholder="写下你的评论..."
-                       class="comment-input-field">
+                       class="comment-input-field"
+                       onkeypress="if(event.key==='Enter') submitComment('${postId}')">
                 <button onclick="submitComment('${postId}')" class="comment-submit-btn">发送</button>
             </div>
+            <div id="replyInputContainer-${postId}"></div>
         </div>
     `;
     
@@ -120,13 +122,10 @@ async function loadComments(postId) {
             }
         }));
 
-        if (error) {
-            console.error("❌ 加载评论失败:", error);
-            commentsList.innerHTML = '<div class="error">加载评论失败</div>';
-            return;
-        }
+        // 组织评论层级结构（支持回复）
+        const organizedComments = organizeComments(data || []);
 
-        renderComments(commentsList, data || []);
+        renderComments(commentsList, organizedComments);
     } catch (err) {
         console.error("❌ 加载评论异常:", err);
         commentsList.innerHTML = '<div class="error">加载评论失败</div>';
@@ -134,7 +133,40 @@ async function loadComments(postId) {
 }
 
 /**
- * 渲染评论列表
+ * 组织评论层级结构（支持回复）
+ */
+function organizeComments(comments) {
+    const commentMap = new Map();
+    const rootComments = [];
+    
+    // 先建立所有评论的映射
+    comments.forEach(comment => {
+        commentMap.set(comment.id, { ...comment, replies: [] });
+    });
+    
+    // 组织层级关系
+    comments.forEach(comment => {
+        const commentNode = commentMap.get(comment.id);
+        if (comment.parent_id) {
+            // 这是回复
+            const parent = commentMap.get(comment.parent_id);
+            if (parent) {
+                parent.replies.push(commentNode);
+            } else {
+                // 父评论不存在，当作根评论处理
+                rootComments.push(commentNode);
+            }
+        } else {
+            // 这是根评论
+            rootComments.push(commentNode);
+        }
+    });
+    
+    return rootComments;
+}
+
+/**
+ * 渲染评论列表（支持回复）
  */
 function renderComments(container, comments) {
     if (comments.length === 0) {
@@ -142,27 +174,108 @@ function renderComments(container, comments) {
         return;
     }
 
-    container.innerHTML = comments.map(comment => `
-        <div class="comment-item" data-comment-id="${comment.id}">
-            <div class="comment-avatar">${comment.user?.avatar || '👤'}</div>
-            <div class="comment-content">
-                <div class="comment-author">${comment.user?.name || '匿名用户'}</div>
-                <div class="comment-text">${comment.content}</div>
-                <div class="comment-time">${formatTime(comment.created_at)}</div>
-            </div>
-        </div>
-    `).join('');
+    container.innerHTML = comments.map(comment => renderCommentItem(comment)).join('');
 }
 
 /**
- * 提交评论
+ * 渲染单个评论项（支持回复）
  */
-export async function submitComment(postId) {
-    const input = document.getElementById(`commentInput-${postId}`);
+function renderCommentItem(comment, isReply = false) {
+    const postId = comment.post_id || document.querySelector('.comments-modal')?.id?.replace('commentsModal-', '');
+    const replyClass = isReply ? 'comment-reply' : '';
+    
+    return `
+        <div class="comment-item ${replyClass}" data-comment-id="${comment.id}">
+            <div class="comment-avatar">${comment.user?.avatar || '👤'}</div>
+            <div class="comment-content">
+                <div class="comment-header">
+                    <div class="comment-author">${comment.user?.name || '匿名用户'}</div>
+                    <div class="comment-time">${formatTime(comment.created_at)}</div>
+                </div>
+                <div class="comment-text">${escapeHtml(comment.content)}</div>
+                <div class="comment-actions">
+                    <button class="reply-btn" onclick="showReplyInput('${comment.id}', '${postId}', '${escapeHtml(comment.user?.name || '匿名用户')}')">
+                        回复
+                    </button>
+                </div>
+                ${comment.replies && comment.replies.length > 0 ? `
+                    <div class="comment-replies">
+                        ${comment.replies.map(reply => renderCommentItem(reply, true)).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * HTML转义
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * 显示回复输入框
+ */
+export function showReplyInput(parentCommentId, postId, parentAuthorName) {
+    const container = document.getElementById(`replyInputContainer-${postId}`);
+    if (!container) return;
+    
+    // 移除已存在的回复输入框
+    const existingReply = container.querySelector('.reply-input-wrapper');
+    if (existingReply) {
+        existingReply.remove();
+        return;
+    }
+    
+    // 创建回复输入框
+    const replyInput = document.createElement('div');
+    replyInput.className = 'reply-input-wrapper';
+    replyInput.innerHTML = `
+        <div class="reply-input-header">
+            <span>回复 @${parentAuthorName}</span>
+            <button class="cancel-reply-btn" onclick="cancelReply('${postId}')">取消</button>
+        </div>
+        <div class="reply-input-content">
+            <input type="text" 
+                   id="replyInput-${parentCommentId}" 
+                   placeholder="写下你的回复..."
+                   class="reply-input-field"
+                   onkeypress="if(event.key==='Enter') submitReply('${parentCommentId}', '${postId}')">
+            <button onclick="submitReply('${parentCommentId}', '${postId}')" class="reply-submit-btn">发送</button>
+        </div>
+    `;
+    
+    container.appendChild(replyInput);
+    
+    // 聚焦到输入框
+    setTimeout(() => {
+        document.getElementById(`replyInput-${parentCommentId}`)?.focus();
+    }, 100);
+}
+
+/**
+ * 取消回复
+ */
+export function cancelReply(postId) {
+    const container = document.getElementById(`replyInputContainer-${postId}`);
+    if (container) {
+        container.innerHTML = '';
+    }
+}
+
+/**
+ * 提交回复
+ */
+export async function submitReply(parentCommentId, postId) {
+    const input = document.getElementById(`replyInput-${parentCommentId}`);
     const content = input?.value?.trim();
     
     if (!content) {
-        alert("请输入评论内容");
+        alert("请输入回复内容");
         return;
     }
 
@@ -183,8 +296,72 @@ export async function submitComment(postId) {
             .insert({
                 post_id: postId,
                 user_id: appState.user.id,
-                content: content
+                content: content,
+                parent_id: parentCommentId
             })
+            .select('*')
+            .single();
+
+        if (error) {
+            console.error("❌ 提交回复失败:", error);
+            alert("回复失败: " + error.message);
+            return;
+        }
+
+        console.log("✅ 回复成功:", data);
+        
+        // 清空输入框并移除回复输入框
+        if (input) input.value = '';
+        cancelReply(postId);
+        
+        // 重新加载评论列表
+        await loadComments(postId);
+        
+        // 更新帖子评论数
+        updatePostCommentCount(postId);
+    } catch (err) {
+        console.error("❌ 提交回复异常:", err);
+        alert("回复失败，请稍后重试");
+    }
+}
+
+/**
+ * 提交评论（根评论）
+ */
+export async function submitComment(postId, parentId = null) {
+    const input = document.getElementById(`commentInput-${postId}`);
+    const content = input?.value?.trim();
+    
+    if (!content) {
+        alert("请输入评论内容");
+        return;
+    }
+
+    if (!appState.user || appState.isGuest) {
+        alert("请先登录");
+        return;
+    }
+
+    const client = getSupabaseClient();
+    if (!client) {
+        alert("网络连接异常");
+        return;
+    }
+
+    try {
+        const insertData = {
+            post_id: postId,
+            user_id: appState.user.id,
+            content: content
+        };
+        
+        if (parentId) {
+            insertData.parent_id = parentId;
+        }
+        
+        const { data, error } = await client
+            .from('comments')
+            .insert(insertData)
             .select('*')
             .single();
 
@@ -199,7 +376,7 @@ export async function submitComment(postId) {
         // 清空输入框
         if (input) input.value = '';
         
-        // 重新加载评论列表（会自动查询用户信息）
+        // 重新加载评论列表
         await loadComments(postId);
         
         // 更新帖子评论数
@@ -268,4 +445,7 @@ function formatTime(timestamp) {
 // 导出到 window 供 HTML 调用
 window.showComments = showComments;
 window.submitComment = submitComment;
+window.submitReply = submitReply;
+window.showReplyInput = showReplyInput;
+window.cancelReply = cancelReply;
 window.closeCommentsModal = closeCommentsModal;
