@@ -88,20 +88,25 @@ async function loadComments(postId) {
         let usersMap = {};
         
         if (userIds.length > 0) {
-            const { data: usersData } = await client
-                .from('users')
-                .select('id, name, avatar_url')
-                .in('id', userIds);
-            
-            if (usersData) {
-                usersMap = usersData.reduce((acc, user) => {
-                    acc[user.id] = {
-                        id: user.id,
-                        name: user.name,
-                        avatar: user.avatar_url
-                    };
-                    return acc;
-                }, {});
+            try {
+                const { data: usersData, error: usersError } = await client
+                    .from('users')
+                    .select('id, name, avatar_url')
+                    .in('id', userIds);
+                
+                if (!usersError && usersData) {
+                    usersMap = usersData.reduce((acc, user) => {
+                        acc[user.id] = {
+                            id: user.id,
+                            name: user.name,
+                            avatar: user.avatar_url
+                        };
+                        return acc;
+                    }, {});
+                }
+            } catch (usersErr) {
+                console.warn("⚠️ 查询用户信息失败（users 表可能不存在）:", usersErr);
+                // 继续执行，使用默认用户信息
             }
         }
 

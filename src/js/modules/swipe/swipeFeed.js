@@ -45,24 +45,29 @@ async function loadPosts() {
         // 获取所有唯一的用户ID
         const userIds = [...new Set((postsData || []).map(p => p.user_id))];
         
-        // 查询用户信息
+        // 查询用户信息（如果 users 表不存在，使用默认值）
         let usersMap = {};
         if (userIds.length > 0) {
-            const { data: usersData } = await client
-                .from('users')
-                .select('id, name, email, avatar_url')
-                .in('id', userIds);
-            
-            if (usersData) {
-                usersMap = usersData.reduce((acc, user) => {
-                    acc[user.id] = user;
-                    return acc;
-                }, {});
+            try {
+                const { data: usersData, error: usersError } = await client
+                    .from('users')
+                    .select('id, name, email, avatar_url')
+                    .in('id', userIds);
+                
+                if (!usersError && usersData) {
+                    usersMap = usersData.reduce((acc, user) => {
+                        acc[user.id] = user;
+                        return acc;
+                    }, {});
+                }
+            } catch (usersErr) {
+                console.warn("⚠️ 查询用户信息失败（users 表可能不存在）:", usersErr);
+                // 继续执行，使用默认用户信息
             }
         }
 
         // 合并数据
-        const data = (postsData || []).map(post => ({
+        posts = (postsData || []).map(post => ({
             ...post,
             user: usersMap[post.user_id] || {
                 id: post.user_id,
@@ -70,14 +75,8 @@ async function loadPosts() {
                 email: null
             }
         }));
-
-        if (error) {
-            console.error("❌ 加载帖子失败:", error);
-            posts = getMockPosts();
-        } else {
-            posts = data || [];
-            console.log(`✅ 加载了 ${posts.length} 条帖子`);
-        }
+        
+        console.log(`✅ 加载了 ${posts.length} 条帖子`);
     } catch (err) {
         console.error("❌ 加载帖子异常:", err);
         posts = getMockPosts();
