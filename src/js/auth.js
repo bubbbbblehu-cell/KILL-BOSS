@@ -134,10 +134,16 @@ export async function handleRegister(email, password) {
             
             // 友好的错误提示
             let errorMsg = "注册失败: " + error.message;
+            
             if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
                 errorMsg = "该邮箱已被注册，请直接登录";
             } else if (error.message?.includes('Password')) {
                 errorMsg = "密码不符合要求，请使用至少6位字符";
+            } else if (error.message?.includes('security purposes') || error.message?.includes('after') || error.message?.includes('seconds')) {
+                // 提取等待时间
+                const match = error.message.match(/(\d+)\s*seconds?/i);
+                const seconds = match ? match[1] : '60';
+                errorMsg = `注册请求过于频繁，请等待 ${seconds} 秒后重试\n\n或者：\n1. 在 Supabase Dashboard → Authentication → Users 中直接创建用户\n2. 等待 ${seconds} 秒后重新注册`;
             }
             
             alert(errorMsg);
