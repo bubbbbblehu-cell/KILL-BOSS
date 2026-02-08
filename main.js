@@ -252,29 +252,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 测试数据库连接
     console.log("🔍 开始测试数据库连接...");
-    const { data, error } = await _supabaseClient.from('buildings').select('*').limit(1);
+    
+    try {
+        const { data, error } = await _supabaseClient.from('buildings').select('*').limit(1);
 
-    if (error) {
-        console.warn("⚠️ 数据库连接受阻，已自动切换至【离线预览模式】");
-        console.error("❌ 数据库连接错误详情:");
-        console.error("错误消息:", error.message);
-        console.error("错误代码:", error.code);
-        console.error("错误详情:", error.details);
-        console.error("错误提示:", error.hint);
-        console.error("完整错误对象:", error);
-        
-        // 常见错误提示
-        if (error.code === 'PGRST116') {
-            console.error("💡 提示: 表 'buildings' 不存在，请检查数据库表是否已创建");
-        } else if (error.message?.includes('JWT')) {
-            console.error("💡 提示: API Key 可能无效，请检查 Supabase 控制台中的 anon/public key");
-        } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
-            console.error("💡 提示: 网络连接问题，请检查网络或防火墙设置");
+        if (error) {
+            console.warn("⚠️ 数据库连接受阻，已自动切换至【离线预览模式】");
+            console.error("❌ 数据库连接错误详情:");
+            console.error("错误消息:", error.message);
+            console.error("错误代码:", error.code);
+            console.error("错误详情:", error.details);
+            console.error("错误提示:", error.hint);
+            console.error("完整错误对象:", error);
+            
+            // 常见错误提示和解决方案
+            if (error.code === 'PGRST116') {
+                console.error("💡 解决方案: 表 'buildings' 不存在");
+                console.error("   1. 进入 Supabase 控制台 → Table Editor");
+                console.error("   2. 创建 buildings 表");
+                console.error("   3. 或修改代码中的表名");
+            } else if (error.code === 'PGRST301' || error.message?.includes('JWT') || error.message?.includes('Invalid API key')) {
+                console.error("💡 解决方案: API Key 无效或格式错误");
+                console.error("   1. 进入 Supabase 控制台 → Project Settings → API");
+                console.error("   2. 复制 'anon' 或 'public' key（不是 service_role）");
+                console.error("   3. 更新 main.js 中的 supabaseKey 变量");
+            } else if (error.code === '42501' || error.message?.includes('permission') || error.message?.includes('policy')) {
+                console.error("💡 解决方案: Row Level Security (RLS) 策略问题");
+                console.error("   1. 进入 Supabase 控制台 → Table Editor → buildings 表 → Policies");
+                console.error("   2. 添加允许匿名访问的策略，或暂时禁用 RLS");
+            } else if (error.message?.includes('network') || error.message?.includes('fetch') || error.message?.includes('Failed to fetch')) {
+                console.error("💡 解决方案: 网络连接问题");
+                console.error("   1. 检查网络连接");
+                console.error("   2. 检查 Supabase URL 是否正确:", supabaseUrl);
+                console.error("   3. 检查 CORS 设置（Project Settings → API → Allowed Origins）");
+                console.error("   4. 尝试在浏览器直接访问:", supabaseUrl + '/rest/v1/');
+            } else {
+                console.error("💡 请查看 SUPABASE_CHECKLIST.md 文件获取详细排查步骤");
+            }
+            
+            console.log("💡 提示: 在浏览器控制台运行 diagnoseSupabase() 进行详细诊断");
+        } else {
+            console.log("✅ 数据库连接成功，数据已同步");
+            console.log("测试查询结果:", data);
         }
-        
-        console.log("💡 提示: 在浏览器控制台运行 diagnoseSupabase() 进行详细诊断");
-    } else {
-        console.log("✅ 数据库连接成功，数据已同步");
-        console.log("测试查询结果:", data);
+    } catch (err) {
+        console.error("❌ 数据库连接异常:", err);
+        console.error("异常类型:", err.name);
+        console.error("异常消息:", err.message);
+        console.error("完整异常:", err);
+        console.error("💡 这可能是网络问题或 Supabase 服务不可用");
     }
 });
