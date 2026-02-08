@@ -33,19 +33,19 @@ USING (true);
 DROP POLICY IF EXISTS "Authenticated users can insert posts" ON posts;
 CREATE POLICY "Authenticated users can insert posts"
 ON posts FOR INSERT
-WITH CHECK (auth.uid() = user_id);
+WITH CHECK (auth.uid()::uuid = user_id::uuid);
 
 -- RLS 策略：允许作者更新自己的帖子
 DROP POLICY IF EXISTS "Users can update own posts" ON posts;
 CREATE POLICY "Users can update own posts"
 ON posts FOR UPDATE
-USING (auth.uid() = user_id);
+USING (auth.uid()::uuid = user_id::uuid);
 
 -- RLS 策略：允许作者删除自己的帖子
 DROP POLICY IF EXISTS "Users can delete own posts" ON posts;
 CREATE POLICY "Users can delete own posts"
 ON posts FOR DELETE
-USING (auth.uid() = user_id);
+USING (auth.uid()::uuid = user_id::uuid);
 
 -- ============================================
 
@@ -77,13 +77,13 @@ USING (true);
 DROP POLICY IF EXISTS "Authenticated users can insert comments" ON comments;
 CREATE POLICY "Authenticated users can insert comments"
 ON comments FOR INSERT
-WITH CHECK (auth.uid() = user_id);
+WITH CHECK (auth.uid()::uuid = user_id::uuid);
 
 -- RLS 策略：允许用户删除自己的评论
 DROP POLICY IF EXISTS "Users can delete own comments" ON comments;
 CREATE POLICY "Users can delete own comments"
 ON comments FOR DELETE
-USING (auth.uid() = user_id);
+USING (auth.uid()::uuid = user_id::uuid);
 
 -- ============================================
 
@@ -113,13 +113,13 @@ USING (true);
 DROP POLICY IF EXISTS "Authenticated users can insert likes" ON likes;
 CREATE POLICY "Authenticated users can insert likes"
 ON likes FOR INSERT
-WITH CHECK (auth.uid() = user_id);
+WITH CHECK (auth.uid()::uuid = user_id::uuid);
 
 -- RLS 策略：允许用户删除自己的点赞
 DROP POLICY IF EXISTS "Users can delete own likes" ON likes;
 CREATE POLICY "Users can delete own likes"
 ON likes FOR DELETE
-USING (auth.uid() = user_id);
+USING (auth.uid()::uuid = user_id::uuid);
 
 -- ============================================
 
@@ -144,19 +144,19 @@ ALTER TABLE favorites ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can read own favorites" ON favorites;
 CREATE POLICY "Users can read own favorites"
 ON favorites FOR SELECT
-USING (auth.uid() = user_id);
+USING (auth.uid()::uuid = user_id::uuid);
 
 -- RLS 策略：允许认证用户插入
 DROP POLICY IF EXISTS "Authenticated users can insert favorites" ON favorites;
 CREATE POLICY "Authenticated users can insert favorites"
 ON favorites FOR INSERT
-WITH CHECK (auth.uid() = user_id);
+WITH CHECK (auth.uid()::uuid = user_id::uuid);
 
 -- RLS 策略：允许用户删除自己的收藏
 DROP POLICY IF EXISTS "Users can delete own favorites" ON favorites;
 CREATE POLICY "Users can delete own favorites"
 ON favorites FOR DELETE
-USING (auth.uid() = user_id);
+USING (auth.uid()::uuid = user_id::uuid);
 
 -- ============================================
 
@@ -184,7 +184,7 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can read own notifications" ON notifications;
 CREATE POLICY "Users can read own notifications"
 ON notifications FOR SELECT
-USING (auth.uid() = user_id);
+USING (auth.uid()::uuid = user_id::uuid);
 
 -- RLS 策略：允许系统插入通知（所有认证用户）
 DROP POLICY IF EXISTS "System can insert notifications" ON notifications;
@@ -196,7 +196,7 @@ WITH CHECK (true);
 DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
 CREATE POLICY "Users can update own notifications"
 ON notifications FOR UPDATE
-USING (auth.uid() = user_id);
+USING (auth.uid()::uuid = user_id::uuid);
 
 -- ============================================
 
@@ -225,7 +225,7 @@ USING (true);
 DROP POLICY IF EXISTS "Authenticated users can insert map poops" ON map_poops;
 CREATE POLICY "Authenticated users can insert map poops"
 ON map_poops FOR INSERT
-WITH CHECK (auth.uid() = user_id);
+WITH CHECK (auth.uid()::uuid = user_id::uuid);
 
 -- ============================================
 
