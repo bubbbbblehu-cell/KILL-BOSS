@@ -163,9 +163,14 @@ export async function handleRegister(email, password) {
             
             // 友好的错误提示
             let errorMsg = "注册失败: " + error.message;
+            let showLoginButton = false;
             
-            if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
+            if (error.message?.includes('already registered') || 
+                error.message?.includes('already exists') ||
+                error.message?.includes('User already registered') ||
+                error.status === 422) {
                 errorMsg = "该邮箱已被注册，请直接登录";
+                showLoginButton = true;
             } else if (error.message?.includes('Password')) {
                 errorMsg = "密码不符合要求，请使用至少6位字符";
             } else if (error.message?.includes('security purposes') || error.message?.includes('after') || error.message?.includes('seconds')) {
@@ -175,7 +180,19 @@ export async function handleRegister(email, password) {
                 errorMsg = `注册请求过于频繁，请等待 ${seconds} 秒后重试\n\n或者：\n1. 在 Supabase Dashboard → Authentication → Users 中直接创建用户\n2. 等待 ${seconds} 秒后重新注册`;
             }
             
+            // 显示错误提示
             showToast(errorMsg, 'error', 5000);
+            
+            // 如果邮箱已注册，显示切换到登录模式的提示
+            if (showLoginButton) {
+                setTimeout(() => {
+                    const email = document.getElementById('registerEmail')?.value;
+                    if (email) {
+                        showEmailExistsPrompt(email);
+                    }
+                }, 500);
+            }
+            
             console.log("📝 ========== 注册失败 ==========");
             return false;
         } else {
@@ -450,13 +467,18 @@ window.switchToRegisterMode = function() {
 /**
  * 切换到登录模式
  */
-window.switchToLoginMode = function() {
+window.switchToLoginMode = function(email = '') {
     const loginMode = document.getElementById('loginMode');
     const registerMode = document.getElementById('registerMode');
     
     if (loginMode && registerMode) {
         registerMode.style.display = 'none';
         loginMode.style.display = 'block';
+        
+        // 如果提供了邮箱，填充到登录邮箱输入框
+        if (email) {
+            document.getElementById('loginEmail').value = email;
+        }
         
         // 清空注册表单
         document.getElementById('registerEmail').value = '';
@@ -465,8 +487,131 @@ window.switchToLoginMode = function() {
         
         // 聚焦到登录邮箱输入框
         setTimeout(() => {
-            document.getElementById('loginEmail')?.focus();
+            const loginEmailInput = document.getElementById('loginEmail');
+            loginEmailInput?.focus();
+            if (email) {
+                // 选中邮箱部分，方便用户修改
+                loginEmailInput.setSelectionRange(0, email.indexOf('@'));
+            }
         }, 100);
+    }
+};
+
+/**
+ * 处理邮箱输入，提供自动补全建议
+ */
+window.handleEmailInput = function(event) {
+    const input = event.target;
+    const value = input.value.trim();
+    const suggestionsList = document.getElementById('emailSuggestionsList');
+    
+    if (!suggestionsList) return;
+    
+    // 如果输入包含 @，显示建议
+    if (value.includes('@')) {
+        const atIndex = value.lastIndexOf('@');
+        const localPart = value.substring(0, atIndex);
+        const domain = value.substring(atIndex + 1);
+        
+        // 如果本地部分为空，不显示建议
+        if (!localPart) {
+            suggestionsList.style.display = 'none';
+            return;
+        }
+        
+        // 如果域名部分为空或很短，显示建议
+        if (!domain || domain.length < 2) {
+            const suggestions = ['gmail.com', 'outlook.com', '163.com', 'qq.com'];
+            suggestionsList.innerHTML = '';
+            suggestionsList.style.display = 'block';
+            
+            suggestions.forEach(suggestion => {
+                // 如果用户已经开始输入域名，进行过滤匹配
+                if (domain && !suggestion.toLowerCase().startsWith(domain.toLowerCase())) {
+                    return;
+                }
+                
+                const item = document.createElement('div');
+                item.className = 'email-suggestion-item';
+                item.innerHTML = `
+                    <span class="suggestion-email">${localPart}@<strong>${suggestion}</strong></span>
+                `;
+                item.onclick = () => {
+                    input.value = `${localPart}@${suggestion}`;
+                    suggestionsList.style.display = 'none';
+                    input.focus();
+                    // 触发 input 事件，确保验证正常工作
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                };
+                suggestionsList.appendChild(item);
+            });
+            
+            // 如果没有匹配的建议，隐藏列表
+            if (suggestionsList.children.length === 0) {
+                suggestionsList.style.display = 'none';
+            }
+        } else {
+            // 如果域名已经完整，隐藏建议
+            suggestionsList.style.display = 'none';
+        }
+    } else {
+        suggestionsList.style.display = 'none';
+    }
+};
+
+// 点击外部时关闭建议列表
+document.addEventListener('click', function(event) {
+    const emailInput = document.getElementById('registerEmail');
+    const suggestionsList = document.getElementById('emailSuggestionsList');
+    
+    if (emailInput && suggestionsList && 
+        !emailInput.contains(event.target) && 
+        !suggestionsList.contains(event.target)) {
+        suggestionsList.style.display = 'none';
+    }
+});
+
+/**
+ * 显示邮箱已存在的提示
+ */
+function showEmailExistsPrompt(email) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    
+    // 创建提示内容
+    const promptDiv = document.createElement('div');
+    promptDiv.className = 'email-exists-prompt';
+    promptDiv.innerHTML = `
+        <div class="prompt-content">
+            <p>该邮箱已注册，是否切换到登录？</p>
+            <div class="prompt-actions">
+                <button class="btn btn-primary btn-small" onclick="switchToLoginMode('${email}')">去登录</button>
+                <button class="btn btn-secondary btn-small" onclick="closeEmailExistsPrompt()">取消</button>
+            </div>
+        </div>
+    `;
+    
+    // 移除旧的提示
+    const oldPrompt = document.querySelector('.email-exists-prompt');
+    if (oldPrompt) oldPrompt.remove();
+    
+    // 添加到页面
+    document.body.appendChild(promptDiv);
+    
+    // 3秒后自动关闭
+    setTimeout(() => {
+        closeEmailExistsPrompt();
+    }, 5000);
+}
+
+/**
+ * 关闭邮箱已存在提示
+ */
+window.closeEmailExistsPrompt = function() {
+    const prompt = document.querySelector('.email-exists-prompt');
+    if (prompt) {
+        prompt.style.opacity = '0';
+        setTimeout(() => prompt.remove(), 300);
     }
 };
 

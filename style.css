@@ -259,6 +259,102 @@ body {
     opacity: 1;
 }
 
+/* 邮箱输入框包装器 */
+.email-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.email-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-top: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.email-suggestion-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+    color: var(--text-primary);
+    font-size: 14px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.suggestion-email {
+    display: block;
+}
+
+.suggestion-email strong {
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+
+.email-suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.email-suggestion-item:hover {
+    background: var(--bg-input);
+}
+
+.email-suggestion-item:first-child {
+    border-radius: 12px 12px 0 0;
+}
+
+.email-suggestion-item:last-child {
+    border-radius: 0 0 12px 12px;
+}
+
+/* 邮箱已存在提示 */
+.email-exists-prompt {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    z-index: 2000;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    min-width: 300px;
+    max-width: 90%;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.prompt-content {
+    text-align: center;
+}
+
+.prompt-content p {
+    margin-bottom: 20px;
+    color: var(--text-primary);
+    font-size: 16px;
+}
+
+.prompt-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-small {
+    padding: 10px 20px;
+    font-size: 14px;
+    min-width: 100px;
+}
+
 .btn {
     width: 100%;
     padding: 16px;
