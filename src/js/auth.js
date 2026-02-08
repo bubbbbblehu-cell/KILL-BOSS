@@ -9,7 +9,116 @@ import { startLoginDemo, showToast } from './utils.js';
 import { switchPage } from './navigation.js';
 
 /**
- * 发送验证码
+ * 用户登录（密码登录）
+ */
+export async function handleLogin(email, password) {
+    // 如果没有传入参数，从输入框获取
+    if (!email) {
+        email = document.getElementById('loginEmail')?.value?.trim();
+    }
+    if (!password) {
+        password = document.getElementById('loginPassword')?.value;
+    }
+    
+    // 输入验证
+    if (!email || !password) {
+        showToast("请输入邮箱和密码", 'error');
+        console.warn("⚠️ 登录失败: 邮箱或密码为空");
+        return false;
+    }
+    
+    // 邮箱格式验证
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showToast("请输入有效的邮箱地址", 'error');
+        return false;
+    }
+
+    console.log("🔐 ========== 开始登录 ==========");
+    console.log("📧 邮箱:", email);
+    console.log("🔑 密码:", "*".repeat(password.length));
+
+    const client = getSupabaseClient();
+    if (!client) {
+        const errorMsg = "网络连接异常，Supabase 未就绪。请检查：1) 是否已引入 Supabase 脚本 2) 科学上网环境 3) 控制台具体报错";
+        showToast(errorMsg, 'error', 5000);
+        console.error("❌", errorMsg);
+        return false;
+    }
+
+    // 设置按钮加载状态
+    const loginBtn = document.getElementById('loginBtn');
+    setLoginButtonLoading(true);
+
+    try {
+        console.log("⏳ 正在发送登录请求...");
+        const { data, error } = await client.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (error) {
+            console.error("❌ 登录失败");
+            console.error("错误代码:", error.status || error.code);
+            console.error("错误消息:", error.message);
+            console.error("完整错误:", error);
+            
+            // 友好的错误提示
+            let errorMsg = "登录失败: " + error.message;
+            if (error.message?.includes('Invalid login credentials')) {
+                errorMsg = "邮箱或密码错误，请检查后重试";
+            } else if (error.message?.includes('Email not confirmed')) {
+                errorMsg = "请先验证邮箱，检查收件箱中的确认邮件";
+            }
+            
+            showToast(errorMsg, 'error');
+            console.log("🔐 ========== 登录失败 ==========");
+            setLoginButtonLoading(false);
+            return false;
+        } else {
+            console.log("✅ 登录成功！");
+            console.log("用户信息:", {
+                id: data.user.id,
+                email: data.user.email,
+                created_at: data.user.created_at
+            });
+            
+            // 更新应用状态
+            updateUser({
+                id: data.user.id,
+                email: data.user.email,
+                name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || '用户'
+            });
+            
+            console.log("📱 应用状态已更新");
+            console.log("🔐 ========== 登录完成 ==========");
+            
+            // 记住登录邮箱
+            saveLastLoginEmail(email);
+            
+            // 登录成功后直接跳转到首页
+            switchPage('swipe');
+            
+            // 显示登录成功提示
+            showToast('登录成功！欢迎回来 🎉', 'success');
+            
+            // 更新个人中心显示
+            updateProfileDisplay();
+            
+            setLoginButtonLoading(false);
+            return true;
+        }
+    } catch (err) {
+        console.error("❌ 登录过程发生异常:", err);
+        showToast("登录时发生错误，请稍后重试", 'error');
+        setLoginButtonLoading(false);
+        return false;
+    }
+}
+
+/**
+ * 发送验证码（已废弃，保留用于兼容性）
+ * @deprecated 已改用密码登录
  */
 export async function sendVerificationCode() {
     const email = document.getElementById('loginEmail')?.value?.trim();
@@ -163,7 +272,8 @@ export async function sendVerificationCode() {
 }
 
 /**
- * 使用验证码登录
+ * 使用验证码登录（已废弃，保留用于兼容性）
+ * @deprecated 已改用密码登录
  */
 export async function handleLoginWithCode() {
     const email = document.getElementById('loginEmail')?.value?.trim();
@@ -389,15 +499,7 @@ function startErrorCountdown(button, seconds) {
     }, 1000);
 }
 
-/**
- * 用户登录（保留用于兼容性，但已改为验证码登录）
- * @deprecated 使用 handleLoginWithCode 代替
- */
-export async function handleLogin(email, password) {
-    // 此函数已废弃，保留用于兼容性
-    console.warn("⚠️ handleLogin 已废弃，请使用验证码登录");
-    return false;
-}
+// handleLogin 函数已在上面定义，用于密码登录
 
 /**
  * 用户注册
@@ -726,9 +828,8 @@ export function setupAuthListener() {
 }
 
 // 导出到 window 对象，供 HTML 调用
-window.sendVerificationCode = sendVerificationCode;
-window.handleLoginWithCode = async function() {
-    await handleLoginWithCode();
+window.handleLogin = async function() {
+    await handleLogin();
 };
 window.restoreLastLoginEmail = restoreLastLoginEmail;
 

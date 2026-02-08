@@ -48,29 +48,28 @@
                                            placeholder="请输入邮箱" 
                                            autocomplete="email"
                                            oninput="handleEmailInput(event)"
-                                           onkeypress="if(event.key==='Enter' && document.getElementById('loginCodeInput') && document.getElementById('loginCodeInput').style.display !== 'none') handleLoginWithCode();">
+                                           onkeypress="if(event.key==='Enter') handleLogin()">
                                     <div class="email-suggestions" id="loginEmailSuggestionsList"></div>
                                 </div>
                             </div>
-                            
-                            <!-- 验证码输入区域（初始隐藏） -->
-                            <div class="form-group" id="loginCodeInput" style="display: none;">
-                                <label class="form-label">验证码</label>
-                                <div class="code-input-wrapper">
-                                    <input type="text" 
-                                           class="form-input code-input" 
-                                           id="loginCode" 
-                                           placeholder="请输入6位验证码" 
-                                           maxlength="6"
-                                           pattern="[0-9]{6}"
-                                           onkeypress="if(event.key==='Enter') handleLoginWithCode()"
-                                           oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                                    <div class="code-hint">验证码已发送至邮箱，请查收</div>
+                            <div class="form-group">
+                                <label class="form-label">密码</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" 
+                                           class="form-input" 
+                                           id="loginPassword" 
+                                           placeholder="请输入密码" 
+                                           autocomplete="current-password"
+                                           onkeypress="if(event.key==='Enter') handleLogin()">
+                                    <button type="button" 
+                                            class="password-toggle" 
+                                            onclick="togglePasswordVisibility('loginPassword', this)"
+                                            aria-label="显示/隐藏密码">
+                                        <span class="eye-icon">👁️</span>
+                                    </button>
                                 </div>
                             </div>
-                            
-                            <button class="btn btn-primary" id="sendCodeBtn" onclick="sendVerificationCode()">发送验证码</button>
-                            <button class="btn btn-primary" id="loginBtn" style="display: none;" onclick="handleLoginWithCode()">登 录</button>
+                            <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">登 录</button>
                             <button class="btn btn-secondary" onclick="switchToRegisterMode()">注册新账号</button>
                             <button class="btn btn-guest" onclick="handleGuestLogin()">以游客身份进入</button>
                         </div>
