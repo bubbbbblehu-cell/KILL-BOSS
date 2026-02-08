@@ -21,7 +21,7 @@ const motivationalQuotes = [
 ];
 
 // ==================== 2. Supabase 初始化 ====================
-const supabaseUrl = 'https://rjqdxxwurocqsewvtdvt.supabase.co';
+const supabaseUrl = 'https://rjqdxxwurocqsewvtduf.supabase.co';
 // 请到 Supabase 控制台 → Project Settings → API → 复制 "anon" / "public"  key
 // 注意：如果使用 sb_publishable_ 开头的 key，需要 Supabase JS v2.39.0+
 const supabaseKey = 'sb_publishable_HDVosfE-j_H7Hogv79aq-A_NwrN0Xsd';
