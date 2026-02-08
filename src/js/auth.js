@@ -94,8 +94,13 @@ export async function sendVerificationCode() {
                     ? `${waitHours} 小时` 
                     : `${waitMinutes} 分钟`;
                 
-                errorMsg = `发送验证码过于频繁，请等待 ${waitTimeText} 后重试\n\n💡 解决方案：\n1. 等待 ${waitTimeText} 后重新发送\n2. 使用其他邮箱地址\n3. 在 Supabase Dashboard 中创建账号（不受限制）`;
+                errorMsg = `发送验证码过于频繁，请等待 ${waitTimeText} 后重试`;
                 showCountdown = true;
+                
+                // 显示详细的解决方案弹窗
+                setTimeout(() => {
+                    showRateLimitSolution(email, waitTimeText);
+                }, 500);
             } else if (error.message?.includes('Invalid email') || error.message?.includes('email')) {
                 errorMsg = "邮箱格式不正确，请检查后重试";
             } else {
@@ -950,6 +955,65 @@ document.addEventListener('click', function(event) {
         registerSuggestionsList.style.display = 'none';
     }
 });
+
+/**
+ * 显示 rate limit 解决方案弹窗
+ */
+function showRateLimitSolution(email, waitTime) {
+    const modal = document.createElement('div');
+    modal.className = 'rate-limit-modal';
+    modal.innerHTML = `
+        <div class="rate-limit-content">
+            <div class="rate-limit-icon">⏰</div>
+            <h3>发送验证码过于频繁</h3>
+            <p class="rate-limit-desc">由于发送频率限制，请等待 <strong>${waitTime}</strong> 后才能再次发送验证码。</p>
+            
+            <div class="rate-limit-solutions">
+                <h4>💡 解决方案：</h4>
+                <div class="solution-item">
+                    <strong>方案1：等待后重试</strong>
+                    <p>等待 ${waitTime} 后，点击"发送验证码"按钮重试</p>
+                </div>
+                <div class="solution-item">
+                    <strong>方案2：使用其他邮箱</strong>
+                    <p>使用不同的邮箱地址（如：${email.includes('@gmail.com') ? 'outlook.com' : 'gmail.com'}）</p>
+                </div>
+                <div class="solution-item highlight">
+                    <strong>方案3：在 Dashboard 创建账号（推荐）</strong>
+                    <p>1. 访问 Supabase Dashboard</p>
+                    <p>2. Authentication → Users → Add User</p>
+                    <p>3. 填写邮箱和密码创建账号</p>
+                    <p>4. 创建后可直接登录，不受限制</p>
+                </div>
+            </div>
+            
+            <div class="rate-limit-actions">
+                <button class="btn btn-primary" onclick="closeRateLimitModal()">我知道了</button>
+                <button class="btn btn-secondary" onclick="window.open('https://supabase.com/dashboard/project/rjqdxxwurocqsewvtduf/auth/users', '_blank')">打开 Dashboard</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 点击背景关闭
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeRateLimitModal();
+        }
+    });
+}
+
+/**
+ * 关闭 rate limit 解决方案弹窗
+ */
+window.closeRateLimitModal = function() {
+    const modal = document.querySelector('.rate-limit-modal');
+    if (modal) {
+        modal.style.opacity = '0';
+        setTimeout(() => modal.remove(), 300);
+    }
+};
 
 /**
  * 显示邮箱已存在的提示
