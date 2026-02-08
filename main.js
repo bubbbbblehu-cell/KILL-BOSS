@@ -21,7 +21,7 @@ const motivationalQuotes = [
 ];
 
 // ==================== 2. Supabase 初始化 ====================
-const supabaseUrl = 'https://rjqdxxwurocqsewvtdvf.supabase.co';
+const supabaseUrl = 'https://rjqdxxwurocqsewvtdvt.supabase.co';
 // 请到 Supabase 控制台 → Project Settings → API → 复制 "anon" / "public"  key
 // 注意：如果使用 sb_publishable_ 开头的 key，需要 Supabase JS v2.39.0+
 const supabaseKey = 'sb_publishable_HDVosfE-j_H7Hogv79aq-A_NwrN0Xsd';
@@ -184,7 +184,13 @@ window.diagnoseSupabase = async function() {
     
     // 3. 测试客户端初始化
     console.log("3️⃣ 测试客户端初始化:");
-    const testClient = supabase.createClient(supabaseUrl, supabaseKey);
+    // 使用新的配置创建测试客户端，避免与现有客户端冲突
+    const testClient = supabase.createClient(supabaseUrl, supabaseKey, {
+        auth: {
+            persistSession: false,  // 测试时不需要持久化会话
+            autoRefreshToken: false
+        }
+    });
     if (testClient) {
         console.log("✅ 客户端创建成功");
     } else {
