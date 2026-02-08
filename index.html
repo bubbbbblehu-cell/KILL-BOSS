@@ -37,27 +37,87 @@
                         <p style="color: var(--text-secondary); margin-top: 10px;">释放压力，扔掉烦恼</p>
                     </div>
                     <div class="login-form">
-                        <div class="form-group">
-                            <label class="form-label">邮箱</label>
-                            <input type="email" 
-                                   class="form-input" 
-                                   id="loginEmail" 
-                                   placeholder="请输入邮箱" 
-                                   autocomplete="email"
-                                   onkeypress="if(event.key==='Enter') handleLogin()">
+                        <!-- 登录模式 -->
+                        <div id="loginMode">
+                            <div class="form-group">
+                                <label class="form-label">邮箱</label>
+                                <input type="email" 
+                                       class="form-input" 
+                                       id="loginEmail" 
+                                       placeholder="请输入邮箱" 
+                                       autocomplete="email"
+                                       onkeypress="if(event.key==='Enter') handleLogin()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">密码</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" 
+                                           class="form-input" 
+                                           id="loginPassword" 
+                                           placeholder="请输入密码" 
+                                           autocomplete="current-password"
+                                           onkeypress="if(event.key==='Enter') handleLogin()">
+                                    <button type="button" 
+                                            class="password-toggle" 
+                                            onclick="togglePasswordVisibility('loginPassword', this)"
+                                            aria-label="显示/隐藏密码">
+                                        <span class="eye-icon">👁️</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">登 录</button>
+                            <button class="btn btn-secondary" onclick="switchToRegisterMode()">注册新账号</button>
+                            <button class="btn btn-guest" onclick="handleGuestLogin()">以游客身份进入</button>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">密码</label>
-                            <input type="password" 
-                                   class="form-input" 
-                                   id="loginPassword" 
-                                   placeholder="请输入密码" 
-                                   autocomplete="current-password"
-                                   onkeypress="if(event.key==='Enter') handleLogin()">
+
+                        <!-- 注册模式 -->
+                        <div id="registerMode" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label">邮箱</label>
+                                <input type="email" 
+                                       class="form-input" 
+                                       id="registerEmail" 
+                                       placeholder="请输入邮箱" 
+                                       autocomplete="email"
+                                       onkeypress="if(event.key==='Enter') handleRegister()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">密码</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" 
+                                           class="form-input" 
+                                           id="registerPassword" 
+                                           placeholder="请输入密码（至少6位）" 
+                                           autocomplete="new-password"
+                                           onkeypress="if(event.key==='Enter') handleRegister()">
+                                    <button type="button" 
+                                            class="password-toggle" 
+                                            onclick="togglePasswordVisibility('registerPassword', this)"
+                                            aria-label="显示/隐藏密码">
+                                        <span class="eye-icon">👁️</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">确认密码</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" 
+                                           class="form-input" 
+                                           id="registerPasswordConfirm" 
+                                           placeholder="请再次输入密码" 
+                                           autocomplete="new-password"
+                                           onkeypress="if(event.key==='Enter') handleRegister()">
+                                    <button type="button" 
+                                            class="password-toggle" 
+                                            onclick="togglePasswordVisibility('registerPasswordConfirm', this)"
+                                            aria-label="显示/隐藏密码">
+                                        <span class="eye-icon">👁️</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" id="registerBtn" onclick="handleRegister()">注册</button>
+                            <button class="btn btn-secondary" onclick="switchToLoginMode()">已有账号？去登录</button>
                         </div>
-                        <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">登 录</button>
-                        <button class="btn btn-secondary" onclick="handleRegister()">注册新账号</button>
-                        <button class="btn btn-guest" onclick="handleGuestLogin()">以游客身份进入</button>
                     </div>
                 </div>
 

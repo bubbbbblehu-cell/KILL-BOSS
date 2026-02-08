@@ -126,6 +126,12 @@ export async function handleRegister(email, password) {
         console.warn("⚠️ 注册失败: 密码长度不足");
         return false;
     }
+    
+    // 密码强度检查（可选，但建议）
+    if (password.length > 72) {
+        showToast("密码长度不能超过72位", 'error');
+        return false;
+    }
 
     console.log("📝 ========== 开始注册 ==========");
     console.log("📧 邮箱:", email);
@@ -359,11 +365,18 @@ window.handleLogin = async function() {
 };
 
 window.handleRegister = async function() {
-    const email = document.getElementById('loginEmail')?.value?.trim();
-    const password = document.getElementById('loginPassword')?.value;
+    const email = document.getElementById('registerEmail')?.value?.trim();
+    const password = document.getElementById('registerPassword')?.value;
+    const passwordConfirm = document.getElementById('registerPasswordConfirm')?.value;
+    
+    // 验证确认密码
+    if (password !== passwordConfirm) {
+        showToast("两次输入的密码不一致，请重新输入", 'error');
+        return;
+    }
     
     // 设置注册按钮加载状态
-    const registerBtn = document.querySelector('.login-form .btn-secondary');
+    const registerBtn = document.getElementById('registerBtn');
     const originalText = registerBtn?.textContent;
     
     if (registerBtn) {
@@ -373,14 +386,87 @@ window.handleRegister = async function() {
     }
     
     try {
-        await handleRegister(email, password);
+        const success = await handleRegister(email, password);
+        if (success) {
+            // 注册成功后切换到登录模式
+            setTimeout(() => {
+                switchToLoginMode();
+                // 清空注册表单
+                document.getElementById('registerEmail').value = '';
+                document.getElementById('registerPassword').value = '';
+                document.getElementById('registerPasswordConfirm').value = '';
+            }, 2000);
+        }
     } finally {
         // 恢复按钮状态
         if (registerBtn) {
             registerBtn.disabled = false;
-            registerBtn.textContent = originalText || '注册新账号';
+            registerBtn.textContent = originalText || '注册';
             registerBtn.style.opacity = '1';
         }
+    }
+};
+
+/**
+ * 切换密码显示/隐藏
+ */
+window.togglePasswordVisibility = function(inputId, button) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        button.classList.add('active');
+        button.querySelector('.eye-icon').textContent = '🙈';
+    } else {
+        input.type = 'password';
+        button.classList.remove('active');
+        button.querySelector('.eye-icon').textContent = '👁️';
+    }
+};
+
+/**
+ * 切换到注册模式
+ */
+window.switchToRegisterMode = function() {
+    const loginMode = document.getElementById('loginMode');
+    const registerMode = document.getElementById('registerMode');
+    
+    if (loginMode && registerMode) {
+        loginMode.style.display = 'none';
+        registerMode.style.display = 'block';
+        
+        // 清空登录表单
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+        
+        // 聚焦到注册邮箱输入框
+        setTimeout(() => {
+            document.getElementById('registerEmail')?.focus();
+        }, 100);
+    }
+};
+
+/**
+ * 切换到登录模式
+ */
+window.switchToLoginMode = function() {
+    const loginMode = document.getElementById('loginMode');
+    const registerMode = document.getElementById('registerMode');
+    
+    if (loginMode && registerMode) {
+        registerMode.style.display = 'none';
+        loginMode.style.display = 'block';
+        
+        // 清空注册表单
+        document.getElementById('registerEmail').value = '';
+        document.getElementById('registerPassword').value = '';
+        document.getElementById('registerPasswordConfirm').value = '';
+        
+        // 聚焦到登录邮箱输入框
+        setTimeout(() => {
+            document.getElementById('loginEmail')?.focus();
+        }, 100);
     }
 };
 
