@@ -39,13 +39,23 @@
                     <div class="login-form">
                         <div class="form-group">
                             <label class="form-label">邮箱</label>
-                            <input type="email" class="form-input" id="loginEmail" placeholder="请输入邮箱" value="test@bosskill.com">
+                            <input type="email" 
+                                   class="form-input" 
+                                   id="loginEmail" 
+                                   placeholder="请输入邮箱" 
+                                   autocomplete="email"
+                                   onkeypress="if(event.key==='Enter') handleLogin()">
                         </div>
                         <div class="form-group">
                             <label class="form-label">密码</label>
-                            <input type="password" class="form-input" id="loginPassword" placeholder="请输入密码" value="123456">
+                            <input type="password" 
+                                   class="form-input" 
+                                   id="loginPassword" 
+                                   placeholder="请输入密码" 
+                                   autocomplete="current-password"
+                                   onkeypress="if(event.key==='Enter') handleLogin()">
                         </div>
-                        <button class="btn btn-primary" onclick="handleLogin()">登 录</button>
+                        <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">登 录</button>
                         <button class="btn btn-secondary" onclick="handleRegister()">注册新账号</button>
                         <button class="btn btn-guest" onclick="handleGuestLogin()">以游客身份进入</button>
                     </div>
@@ -293,6 +303,9 @@
                 </div>
             </div>
         </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
 
     <!-- 弹窗 -->
     <div class="modal-overlay" id="drawPromptModal">

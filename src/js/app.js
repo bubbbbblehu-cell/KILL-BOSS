@@ -24,6 +24,10 @@ export async function initApp() {
         return;
     }
 
+    // 设置认证状态监听
+    const { setupAuthListener } = await import('./auth.js');
+    setupAuthListener();
+    
     // 检查并恢复登录状态
     const session = await checkAndRestoreSession();
     if (session && session.user) {
@@ -38,6 +42,12 @@ export async function initApp() {
             email: session.user.email,
             name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '用户'
         });
+        
+        // 更新个人中心显示（延迟执行，确保 DOM 已加载）
+        setTimeout(() => {
+            const updateFn = window.updateProfileDisplay;
+            if (updateFn) updateFn();
+        }, 100);
         
         // 如果当前在登录页，切换到首页
         const loginPage = document.getElementById('loginPage');

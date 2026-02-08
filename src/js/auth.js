@@ -4,8 +4,8 @@
  */
 
 import { getSupabaseClient } from './supabase.js';
-import { updateUser, clearUser, setGuestMode } from './state.js';
-import { startLoginDemo } from './utils.js';
+import { updateUser, clearUser, setGuestMode, appState } from './state.js';
+import { startLoginDemo, showToast } from './utils.js';
 import { switchPage } from './navigation.js';
 
 /**
@@ -14,8 +14,15 @@ import { switchPage } from './navigation.js';
 export async function handleLogin(email, password) {
     // 输入验证
     if (!email || !password) {
-        alert("请输入邮箱和密码");
+        showToast("请输入邮箱和密码", 'error');
         console.warn("⚠️ 登录失败: 邮箱或密码为空");
+        return false;
+    }
+    
+    // 邮箱格式验证
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showToast("请输入有效的邮箱地址", 'error');
         return false;
     }
 
@@ -52,7 +59,8 @@ export async function handleLogin(email, password) {
                 errorMsg = "请先验证邮箱，检查收件箱中的确认邮件";
             }
             
-            alert(errorMsg);
+            // 使用 Toast 显示错误，而不是 alert
+            showToast(errorMsg, 'error');
             console.log("🔐 ========== 登录失败 ==========");
             return false;
         } else {
@@ -77,12 +85,20 @@ export async function handleLogin(email, password) {
             console.log("📱 应用状态已更新");
             console.log("🔐 ========== 登录完成 ==========");
             
-            startLoginDemo();
+            // 登录成功后直接跳转到首页
+            switchPage('swipe');
+            
+            // 显示登录成功提示
+            showToast('登录成功！欢迎回来 🎉', 'success');
+            
+            // 更新个人中心显示
+            updateProfileDisplay();
+            
             return true;
         }
     } catch (err) {
         console.error("❌ 登录过程发生异常:", err);
-        alert("登录时发生错误，请稍后重试");
+        showToast("登录时发生错误，请稍后重试", 'error');
         return false;
     }
 }
@@ -93,13 +109,20 @@ export async function handleLogin(email, password) {
 export async function handleRegister(email, password) {
     // 输入验证
     if (!email || !password) {
-        alert("请输入邮箱和密码");
+        showToast("请输入邮箱和密码", 'error');
         console.warn("⚠️ 注册失败: 邮箱或密码为空");
         return false;
     }
 
+    // 邮箱格式验证
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showToast("请输入有效的邮箱地址", 'error');
+        return false;
+    }
+
     if (password.length < 6) {
-        alert("密码长度至少为6位");
+        showToast("密码长度至少为6位", 'error');
         console.warn("⚠️ 注册失败: 密码长度不足");
         return false;
     }
@@ -111,7 +134,7 @@ export async function handleRegister(email, password) {
     const client = getSupabaseClient();
     if (!client) {
         const errorMsg = "网络连接异常，Supabase 未就绪。请检查：1) 是否已引入 Supabase 脚本 2) 科学上网环境 3) 控制台具体报错";
-        alert(errorMsg);
+        showToast(errorMsg, 'error', 5000);
         console.error("❌", errorMsg);
         return false;
     }
@@ -146,7 +169,7 @@ export async function handleRegister(email, password) {
                 errorMsg = `注册请求过于频繁，请等待 ${seconds} 秒后重试\n\n或者：\n1. 在 Supabase Dashboard → Authentication → Users 中直接创建用户\n2. 等待 ${seconds} 秒后重新注册`;
             }
             
-            alert(errorMsg);
+            showToast(errorMsg, 'error', 5000);
             console.log("📝 ========== 注册失败 ==========");
             return false;
         } else {
@@ -159,7 +182,7 @@ export async function handleRegister(email, password) {
             
             // 检查是否需要邮箱验证
             if (data.user && !data.session) {
-                alert("注册成功！请检查邮箱并点击确认链接以完成注册。");
+                showToast("注册成功！请检查邮箱并点击确认链接以完成注册。", 'info', 5000);
                 console.log("📧 需要邮箱验证，已发送确认邮件");
                 console.log("📝 ========== 注册完成 ==========");
                 return false;
@@ -171,14 +194,19 @@ export async function handleRegister(email, password) {
                     name: data.user.email?.split('@')[0] || '用户'
                 });
                 console.log("✅ 已自动登录");
-                startLoginDemo();
+                
+                // 跳转到首页
+                switchPage('swipe');
+                showToast('注册成功！欢迎加入 🎉', 'success');
+                updateProfileDisplay();
+                
                 console.log("📝 ========== 注册完成 ==========");
                 return true;
             }
         }
     } catch (err) {
         console.error("❌ 注册过程发生异常:", err);
-        alert("注册时发生错误，请稍后重试");
+        showToast("注册时发生错误，请稍后重试", 'error');
         return false;
     }
 }
@@ -231,18 +259,131 @@ export async function handleLogout() {
     if (passwordInput) passwordInput.value = '';
 }
 
+// showToast 已从 utils.js 导入
+
+/**
+ * 设置登录按钮加载状态
+ */
+function setLoginButtonLoading(isLoading) {
+    const loginBtn = document.querySelector('.login-form .btn-primary');
+    if (!loginBtn) return;
+    
+    if (isLoading) {
+        loginBtn.disabled = true;
+        loginBtn.textContent = '登录中...';
+        loginBtn.classList.add('loading');
+        loginBtn.style.opacity = '0.7';
+    } else {
+        loginBtn.disabled = false;
+        loginBtn.textContent = '登 录';
+        loginBtn.classList.remove('loading');
+        loginBtn.style.opacity = '1';
+    }
+}
+
+/**
+ * 更新个人中心显示
+ */
+function updateProfileDisplay() {
+    if (!appState.user) return;
+    
+    const profileName = document.getElementById('profileName');
+    const profileEmail = document.getElementById('profileEmail');
+    
+    if (profileName) {
+        profileName.textContent = appState.user.name || appState.user.email?.split('@')[0] || '用户';
+    }
+    
+    if (profileEmail) {
+        profileEmail.textContent = appState.user.email || '未绑定邮箱';
+    }
+}
+
+/**
+ * 监听认证状态变化
+ */
+export function setupAuthListener() {
+    const client = getSupabaseClient();
+    if (!client) return;
+    
+    // 监听认证状态变化
+    client.auth.onAuthStateChange((event, session) => {
+        console.log("🔐 认证状态变化:", event, session?.user?.email);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+            // 用户登录
+            updateUser({
+                id: session.user.id,
+                email: session.user.email,
+                name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '用户'
+            });
+            updateProfileDisplay();
+            
+            // 如果当前在登录页，切换到首页
+            const loginPage = document.getElementById('loginPage');
+            if (loginPage && loginPage.classList.contains('active')) {
+                switchPage('swipe');
+            }
+        } else if (event === 'SIGNED_OUT') {
+            // 用户登出
+            clearUser();
+            switchPage('login');
+        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+            // Token 刷新
+            updateUser({
+                id: session.user.id,
+                email: session.user.email,
+                name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '用户'
+            });
+        }
+    });
+}
+
 // 导出到 window 对象，供 HTML 调用
 window.handleLogin = async function() {
-    const email = document.getElementById('loginEmail')?.value;
+    const email = document.getElementById('loginEmail')?.value?.trim();
     const password = document.getElementById('loginPassword')?.value;
-    await handleLogin(email, password);
+    
+    // 设置加载状态
+    setLoginButtonLoading(true);
+    
+    try {
+        const success = await handleLogin(email, password);
+        if (!success) {
+            // 登录失败，保持表单状态
+        }
+    } finally {
+        // 恢复按钮状态
+        setLoginButtonLoading(false);
+    }
 };
 
 window.handleRegister = async function() {
-    const email = document.getElementById('loginEmail')?.value;
+    const email = document.getElementById('loginEmail')?.value?.trim();
     const password = document.getElementById('loginPassword')?.value;
-    await handleRegister(email, password);
+    
+    // 设置注册按钮加载状态
+    const registerBtn = document.querySelector('.login-form .btn-secondary');
+    const originalText = registerBtn?.textContent;
+    
+    if (registerBtn) {
+        registerBtn.disabled = true;
+        registerBtn.textContent = '注册中...';
+        registerBtn.style.opacity = '0.7';
+    }
+    
+    try {
+        await handleRegister(email, password);
+    } finally {
+        // 恢复按钮状态
+        if (registerBtn) {
+            registerBtn.disabled = false;
+            registerBtn.textContent = originalText || '注册新账号';
+            registerBtn.style.opacity = '1';
+        }
+    }
 };
 
 window.handleGuestLogin = handleGuestLogin;
 window.handleLogout = handleLogout;
+window.updateProfileDisplay = updateProfileDisplay;

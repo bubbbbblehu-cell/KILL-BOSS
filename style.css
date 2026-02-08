@@ -231,9 +231,33 @@ body {
     color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
     transform: scale(1.02);
     box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+}
+
+.btn-primary:disabled,
+.btn-primary.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn-primary.loading::after {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-left: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 .btn-secondary {
@@ -1193,12 +1217,35 @@ body {
     border-radius: 12px;
     z-index: 1000;
     opacity: 0;
-    transition: all 0.3s;
+    transition: all 0.3s ease-out;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    max-width: 90%;
+    text-align: center;
+    font-size: 14px;
+    pointer-events: none;
 }
 
 .toast.show {
     transform: translateX(-50%) translateY(0);
     opacity: 1;
+}
+
+.toast-success {
+    border-color: #4caf50;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), var(--bg-card));
+    color: #4caf50;
+}
+
+.toast-error {
+    border-color: #f44336;
+    background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), var(--bg-card));
+    color: #f44336;
+}
+
+.toast-info {
+    border-color: #2196f3;
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), var(--bg-card));
+    color: #2196f3;
 }
 
 /* 控制台面板 */
