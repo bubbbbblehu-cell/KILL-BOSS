@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0"></script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BOSS KILL - demo </title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- Supabase 客户端库（必须在模块之前加载） -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0"></script>
 </head>
 <body>
     <div class="phone-container">
@@ -292,6 +293,7 @@
 
     <div class="toast" id="toast"></div>
 
-    <script src="main.js"></script>
+    <!-- 模块化 JavaScript 文件 -->
+    <script type="module" src="src/js/main.js"></script>
 </body>
 </html>
