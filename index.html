@@ -42,12 +42,12 @@
                             <div class="form-group">
                                 <label class="form-label">邮箱</label>
                                 <div class="email-input-wrapper">
-                                    <input type="email" 
+                                    <input type="text" 
                                            class="form-input" 
                                            id="loginEmail" 
                                            placeholder="请输入邮箱" 
                                            autocomplete="email"
-                                           onkeypress="if(event.key==='Enter' && !document.getElementById('loginCodeInput').style.display || document.getElementById('loginCodeInput').style.display === 'none') sendVerificationCode(); else if(event.key==='Enter') handleLoginWithCode();">
+                                           onkeypress="if(event.key==='Enter' && document.getElementById('loginCodeInput') && document.getElementById('loginCodeInput').style.display !== 'none') handleLoginWithCode();">
                                 </div>
                             </div>
                             
@@ -78,14 +78,14 @@
                             <div class="form-group">
                                 <label class="form-label">邮箱</label>
                                 <div class="email-input-wrapper">
-                                    <input type="email" 
+                                    <input type="text" 
                                            class="form-input" 
                                            id="registerEmail" 
                                            placeholder="请输入邮箱（如：user@gmail.com）" 
                                            autocomplete="email"
                                            onkeypress="if(event.key==='Enter') handleRegister()"
                                            oninput="handleEmailInput(event)"
-                                           onfocus="handleEmailInput({target: document.getElementById('registerEmail')})">
+                                           onblur="handleEmailInput({target: document.getElementById('registerEmail')})">
                                     <div class="email-suggestions" id="emailSuggestionsList"></div>
                                 </div>
                             </div>

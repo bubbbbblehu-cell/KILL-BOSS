@@ -20,7 +20,7 @@ export async function sendVerificationCode() {
         return false;
     }
     
-    // 邮箱格式验证
+    // 邮箱格式验证（只在点击按钮时验证，不在输入过程中验证）
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         showToast("请输入有效的邮箱地址", 'error');
@@ -64,12 +64,33 @@ export async function sendVerificationCode() {
             console.error("错误消息:", error.message);
             console.error("完整错误:", error);
             
-            let errorMsg = "发送验证码失败: " + error.message;
-            if (error.message?.includes('rate limit') || error.message?.includes('too many')) {
-                errorMsg = "发送过于频繁，请稍后再试";
+            let errorMsg = "发送验证码失败";
+            let showCountdown = false;
+            let waitSeconds = 60;
+            
+            // 处理不同类型的错误
+            if (error.status === 429 || error.code === 429 || 
+                error.message?.includes('rate limit') || 
+                error.message?.includes('too many') ||
+                error.message?.includes('email rate limit exceeded')) {
+                // 提取等待时间（如果有）
+                const match = error.message?.match(/(\d+)\s*(seconds?|秒|分钟|minutes?)/i);
+                if (match) {
+                    waitSeconds = parseInt(match[1]);
+                    if (match[2]?.toLowerCase().includes('minute') || match[2]?.includes('分钟')) {
+                        waitSeconds *= 60;
+                    }
+                }
+                
+                errorMsg = `发送过于频繁，请等待 ${waitSeconds} 秒后重试\n\n提示：\n1. 请检查邮箱是否正确\n2. 如果邮箱正确，请稍后再试\n3. 或尝试使用其他邮箱`;
+                showCountdown = true;
+            } else if (error.message?.includes('Invalid email') || error.message?.includes('email')) {
+                errorMsg = "邮箱格式不正确，请检查后重试";
+            } else {
+                errorMsg = "发送失败: " + (error.message || '未知错误');
             }
             
-            showToast(errorMsg, 'error');
+            showToast(errorMsg, 'error', 5000);
             console.log("📧 ========== 发送失败 ==========");
             
             // 恢复按钮状态
@@ -78,6 +99,12 @@ export async function sendVerificationCode() {
                 sendBtn.textContent = originalText || '发送验证码';
                 sendBtn.style.opacity = '1';
             }
+            
+            // 如果是因为频率限制，显示倒计时
+            if (showCountdown) {
+                startErrorCountdown(sendBtn, waitSeconds);
+            }
+            
             return false;
         } else {
             console.log("✅ 验证码已发送！");
@@ -253,6 +280,29 @@ function startCodeCountdown() {
             sendBtn.disabled = false;
             sendBtn.textContent = '重新发送验证码';
             sendBtn.style.opacity = '1';
+        }
+    }, 1000);
+}
+
+/**
+ * 开始错误倒计时（发送失败后的等待时间）
+ */
+function startErrorCountdown(button, seconds) {
+    if (!button) return;
+    
+    let countdown = seconds;
+    button.disabled = true;
+    const originalText = button.textContent;
+    
+    const timer = setInterval(() => {
+        button.textContent = `请等待 ${countdown} 秒后重试`;
+        countdown--;
+        
+        if (countdown < 0) {
+            clearInterval(timer);
+            button.disabled = false;
+            button.textContent = originalText || '发送验证码';
+            button.style.opacity = '1';
         }
     }, 1000);
 }
@@ -703,6 +753,9 @@ window.switchToLoginMode = function(email = '') {
 /**
  * 处理邮箱输入，提供自动补全建议
  */
+// 防抖定时器
+let emailInputDebounceTimer = null;
+
 window.handleEmailInput = function(event) {
     const input = event.target;
     const value = input.value.trim();
@@ -710,8 +763,15 @@ window.handleEmailInput = function(event) {
     
     if (!suggestionsList) return;
     
-    // 如果输入包含 @，显示建议
-    if (value.includes('@')) {
+    // 清除之前的定时器
+    if (emailInputDebounceTimer) {
+        clearTimeout(emailInputDebounceTimer);
+    }
+    
+    // 防抖：延迟显示建议，避免频繁更新
+    emailInputDebounceTimer = setTimeout(() => {
+        // 如果输入包含 @，显示建议
+        if (value.includes('@')) {
         const atIndex = value.lastIndexOf('@');
         const localPart = value.substring(0, atIndex);
         const domain = value.substring(atIndex + 1);
@@ -757,9 +817,10 @@ window.handleEmailInput = function(event) {
             // 如果域名已经完整，隐藏建议
             suggestionsList.style.display = 'none';
         }
-    } else {
-        suggestionsList.style.display = 'none';
-    }
+        } else {
+            suggestionsList.style.display = 'none';
+        }
+    }, 300); // 300ms 防抖延迟
 };
 
 // 点击外部时关闭建议列表
