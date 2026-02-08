@@ -31,14 +31,45 @@ async function loadPosts() {
     }
 
     try {
-        const { data, error } = await client
+        // 先查询帖子，然后单独查询用户信息
+        const { data: postsData, error: postsError } = await client
             .from('posts')
-            .select(`
-                *,
-                user:users(id, name)
-            `)
+            .select('*')
             .order('created_at', { ascending: false })
             .limit(50);
+
+        if (postsError) {
+            throw postsError;
+        }
+
+        // 获取所有唯一的用户ID
+        const userIds = [...new Set((postsData || []).map(p => p.user_id))];
+        
+        // 查询用户信息
+        let usersMap = {};
+        if (userIds.length > 0) {
+            const { data: usersData } = await client
+                .from('users')
+                .select('id, name, email, avatar_url')
+                .in('id', userIds);
+            
+            if (usersData) {
+                usersMap = usersData.reduce((acc, user) => {
+                    acc[user.id] = user;
+                    return acc;
+                }, {});
+            }
+        }
+
+        // 合并数据
+        const data = (postsData || []).map(post => ({
+            ...post,
+            user: usersMap[post.user_id] || {
+                id: post.user_id,
+                name: post.user_id.split('-')[0] || '用户',
+                email: null
+            }
+        }));
 
         if (error) {
             console.error("❌ 加载帖子失败:", error);

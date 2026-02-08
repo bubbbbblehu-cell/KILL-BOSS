@@ -68,16 +68,50 @@ async function loadLeaderboard(type) {
     }
 
     try {
-        const { data, error } = await client
+        // 先查询帖子
+        const { data: postsData, error: postsError } = await client
             .from('posts')
-            .select(`
-                *,
-                user:users(id, name, avatar)
-            `)
+            .select('*')
             .gte('created_at', startDate)
             .lte('created_at', endDate)
             .order('likes_count', { ascending: false })
             .limit(3);
+
+        if (postsError) {
+            throw postsError;
+        }
+
+        // 获取用户ID并查询用户信息
+        const userIds = [...new Set((postsData || []).map(p => p.user_id))];
+        let usersMap = {};
+        
+        if (userIds.length > 0) {
+            const { data: usersData } = await client
+                .from('users')
+                .select('id, name, avatar_url')
+                .in('id', userIds);
+            
+            if (usersData) {
+                usersMap = usersData.reduce((acc, user) => {
+                    acc[user.id] = {
+                        id: user.id,
+                        name: user.name,
+                        avatar: user.avatar_url
+                    };
+                    return acc;
+                }, {});
+            }
+        }
+
+        // 合并数据
+        const data = (postsData || []).map(post => ({
+            ...post,
+            user: usersMap[post.user_id] || {
+                id: post.user_id,
+                name: post.user_id.split('-')[0] || '用户',
+                avatar: null
+            }
+        }));
 
         if (error) {
             console.error("❌ 加载榜单失败:", error);

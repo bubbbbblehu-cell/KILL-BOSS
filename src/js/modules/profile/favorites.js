@@ -35,22 +35,51 @@ async function loadFavorites() {
     }
 
     try {
-        const { data, error } = await client
+        // 先查询收藏
+        const { data: favoritesData, error: favoritesError } = await client
             .from('favorites')
-            .select(`
-                *,
-                post:posts(*, user:users(id, name))
-            `)
+            .select('*, post:posts(*)')
             .eq('user_id', appState.user.id)
             .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error("❌ 加载收藏失败:", error);
+        if (favoritesError) {
+            console.error("❌ 加载收藏失败:", favoritesError);
             container.innerHTML = '<div class="error">加载失败</div>';
             return;
         }
 
-        renderFavorites(container, data || []);
+        // 获取所有用户ID
+        const userIds = [...new Set((favoritesData || []).map(f => f.post?.user_id).filter(Boolean))];
+        
+        // 查询用户信息
+        let usersMap = {};
+        if (userIds.length > 0) {
+            const { data: usersData } = await client
+                .from('users')
+                .select('id, name')
+                .in('id', userIds);
+            
+            if (usersData) {
+                usersMap = usersData.reduce((acc, user) => {
+                    acc[user.id] = user;
+                    return acc;
+                }, {});
+            }
+        }
+
+        // 合并数据
+        const data = (favoritesData || []).map(fav => ({
+            ...fav,
+            post: fav.post ? {
+                ...fav.post,
+                user: usersMap[fav.post.user_id] || {
+                    id: fav.post.user_id,
+                    name: fav.post.user_id.split('-')[0] || '用户'
+                }
+            } : null
+        })).filter(fav => fav.post);
+
+        renderFavorites(container, data);
     } catch (err) {
         console.error("❌ 加载收藏异常:", err);
         container.innerHTML = '<div class="error">加载失败</div>';

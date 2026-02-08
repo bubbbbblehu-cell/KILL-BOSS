@@ -72,14 +72,48 @@ async function loadComments(postId) {
     }
 
     try {
-        const { data, error } = await client
+        // 先查询评论
+        const { data: commentsData, error: commentsError } = await client
             .from('comments')
-            .select(`
-                *,
-                user:users(id, name, avatar)
-            `)
+            .select('*')
             .eq('post_id', postId)
             .order('created_at', { ascending: true });
+
+        if (commentsError) {
+            throw commentsError;
+        }
+
+        // 获取用户ID并查询用户信息
+        const userIds = [...new Set((commentsData || []).map(c => c.user_id))];
+        let usersMap = {};
+        
+        if (userIds.length > 0) {
+            const { data: usersData } = await client
+                .from('users')
+                .select('id, name, avatar_url')
+                .in('id', userIds);
+            
+            if (usersData) {
+                usersMap = usersData.reduce((acc, user) => {
+                    acc[user.id] = {
+                        id: user.id,
+                        name: user.name,
+                        avatar: user.avatar_url
+                    };
+                    return acc;
+                }, {});
+            }
+        }
+
+        // 合并数据
+        const data = (commentsData || []).map(comment => ({
+            ...comment,
+            user: usersMap[comment.user_id] || {
+                id: comment.user_id,
+                name: comment.user_id.split('-')[0] || '用户',
+                avatar: null
+            }
+        }));
 
         if (error) {
             console.error("❌ 加载评论失败:", error);
@@ -146,10 +180,7 @@ export async function submitComment(postId) {
                 user_id: appState.user.id,
                 content: content
             })
-            .select(`
-                *,
-                user:users(id, name, avatar)
-            `)
+            .select('*')
             .single();
 
         if (error) {
@@ -163,7 +194,7 @@ export async function submitComment(postId) {
         // 清空输入框
         if (input) input.value = '';
         
-        // 重新加载评论列表
+        // 重新加载评论列表（会自动查询用户信息）
         await loadComments(postId);
         
         // 更新帖子评论数
