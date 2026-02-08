@@ -107,34 +107,213 @@ window.handleLogin = async function() {
     const email = document.getElementById('loginEmail')?.value;
     const password = document.getElementById('loginPassword')?.value;
 
-    console.log("尝试登录:", email);
-
-    const client = _supabaseClient || initSupabase();
-    if (!client) {
-        alert("网络连接异常，Supabase 未就绪。请检查：1) 是否已引入 Supabase 脚本 2) 科学上网环境 3) 控制台具体报错");
+    // 输入验证
+    if (!email || !password) {
+        alert("请输入邮箱和密码");
+        console.warn("⚠️ 登录失败: 邮箱或密码为空");
         return;
     }
 
-    const { data, error } = await client.auth.signInWithPassword({
-        email: email,
-        password: password
-    });
+    console.log("🔐 ========== 开始登录 ==========");
+    console.log("📧 邮箱:", email);
+    console.log("🔑 密码:", "*".repeat(password.length));
 
-    if (error) {
-        alert("登录失败: " + error.message);
-    } else {
-        appState.isLoggedIn = true;
-        appState.user = data.user;
-        startLoginDemo();
+    const client = _supabaseClient || initSupabase();
+    if (!client) {
+        const errorMsg = "网络连接异常，Supabase 未就绪。请检查：1) 是否已引入 Supabase 脚本 2) 科学上网环境 3) 控制台具体报错";
+        alert(errorMsg);
+        console.error("❌", errorMsg);
+        return;
+    }
+
+    try {
+        console.log("⏳ 正在发送登录请求...");
+        const { data, error } = await client.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (error) {
+            console.error("❌ 登录失败");
+            console.error("错误代码:", error.status || error.code);
+            console.error("错误消息:", error.message);
+            console.error("完整错误:", error);
+            
+            // 友好的错误提示
+            let errorMsg = "登录失败: " + error.message;
+            if (error.message?.includes('Invalid login credentials')) {
+                errorMsg = "邮箱或密码错误，请检查后重试";
+            } else if (error.message?.includes('Email not confirmed')) {
+                errorMsg = "请先验证邮箱，检查收件箱中的确认邮件";
+            }
+            
+            alert(errorMsg);
+            console.log("🔐 ========== 登录失败 ==========");
+        } else {
+            console.log("✅ 登录成功！");
+            console.log("用户信息:", {
+                id: data.user.id,
+                email: data.user.email,
+                created_at: data.user.created_at
+            });
+            console.log("会话信息:", {
+                access_token: data.session?.access_token?.substring(0, 20) + '...',
+                expires_at: data.session?.expires_at
+            });
+            
+            appState.isLoggedIn = true;
+            appState.isGuest = false;
+            appState.user = {
+                id: data.user.id,
+                email: data.user.email,
+                name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || '用户'
+            };
+            
+            console.log("📱 应用状态已更新:", appState);
+            console.log("🔐 ========== 登录完成 ==========");
+            
+            startLoginDemo();
+        }
+    } catch (err) {
+        console.error("❌ 登录过程发生异常:", err);
+        alert("登录时发生错误，请稍后重试");
+    }
+};
+
+window.handleRegister = async function() {
+    const email = document.getElementById('loginEmail')?.value;
+    const password = document.getElementById('loginPassword')?.value;
+
+    // 输入验证
+    if (!email || !password) {
+        alert("请输入邮箱和密码");
+        console.warn("⚠️ 注册失败: 邮箱或密码为空");
+        return;
+    }
+
+    if (password.length < 6) {
+        alert("密码长度至少为6位");
+        console.warn("⚠️ 注册失败: 密码长度不足");
+        return;
+    }
+
+    console.log("📝 ========== 开始注册 ==========");
+    console.log("📧 邮箱:", email);
+    console.log("🔑 密码长度:", password.length);
+
+    const client = _supabaseClient || initSupabase();
+    if (!client) {
+        const errorMsg = "网络连接异常，Supabase 未就绪。请检查：1) 是否已引入 Supabase 脚本 2) 科学上网环境 3) 控制台具体报错";
+        alert(errorMsg);
+        console.error("❌", errorMsg);
+        return;
+    }
+
+    try {
+        console.log("⏳ 正在发送注册请求...");
+        const { data, error } = await client.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                emailRedirectTo: window.location.origin
+            }
+        });
+
+        if (error) {
+            console.error("❌ 注册失败");
+            console.error("错误代码:", error.status || error.code);
+            console.error("错误消息:", error.message);
+            console.error("完整错误:", error);
+            
+            // 友好的错误提示
+            let errorMsg = "注册失败: " + error.message;
+            if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
+                errorMsg = "该邮箱已被注册，请直接登录";
+            } else if (error.message?.includes('Password')) {
+                errorMsg = "密码不符合要求，请使用至少6位字符";
+            }
+            
+            alert(errorMsg);
+            console.log("📝 ========== 注册失败 ==========");
+        } else {
+            console.log("✅ 注册成功！");
+            console.log("用户信息:", {
+                id: data.user?.id,
+                email: data.user?.email,
+                created_at: data.user?.created_at
+            });
+            
+            // 检查是否需要邮箱验证
+            if (data.user && !data.session) {
+                alert("注册成功！请检查邮箱并点击确认链接以完成注册。");
+                console.log("📧 需要邮箱验证，已发送确认邮件");
+            } else {
+                // 自动登录
+                appState.isLoggedIn = true;
+                appState.isGuest = false;
+                appState.user = {
+                    id: data.user.id,
+                    email: data.user.email,
+                    name: data.user.email?.split('@')[0] || '用户'
+                };
+                console.log("✅ 已自动登录");
+                startLoginDemo();
+            }
+            
+            console.log("📝 ========== 注册完成 ==========");
+        }
+    } catch (err) {
+        console.error("❌ 注册过程发生异常:", err);
+        alert("注册时发生错误，请稍后重试");
     }
 };
 
 window.handleGuestLogin = function() {
-    console.log("以游客身份进入");
+    console.log("👤 ========== 游客登录 ==========");
     appState.isLoggedIn = true;
     appState.isGuest = true;
     appState.user = { id: 'guest', name: '匿名用户' };
+    console.log("✅ 已切换到游客模式");
+    console.log("📱 应用状态:", appState);
     startLoginDemo();
+};
+
+window.handleLogout = async function() {
+    console.log("🚪 ========== 开始登出 ==========");
+    
+    const client = _supabaseClient || initSupabase();
+    
+    // 如果是 Supabase 用户，调用登出 API
+    if (client && !appState.isGuest) {
+        try {
+            const { error } = await client.auth.signOut();
+            if (error) {
+                console.error("❌ Supabase 登出失败:", error);
+            } else {
+                console.log("✅ Supabase 登出成功");
+            }
+        } catch (err) {
+            console.error("❌ 登出过程发生异常:", err);
+        }
+    }
+    
+    // 清除应用状态
+    appState.isLoggedIn = false;
+    appState.isGuest = false;
+    appState.user = null;
+    
+    console.log("✅ 已清除登录状态");
+    console.log("📱 应用状态:", appState);
+    console.log("🚪 ========== 登出完成 ==========");
+    
+    // 返回登录页面
+    window.switchPage('login');
+    
+    // 清空登录表单
+    const emailInput = document.getElementById('loginEmail');
+    const passwordInput = document.getElementById('loginPassword');
+    if (emailInput) emailInput.value = '';
+    if (passwordInput) passwordInput.value = '';
 };
 
 window.skipDemo = function() {
@@ -244,7 +423,56 @@ window.diagnoseSupabase = async function() {
     console.log("🔍 ========== 诊断完成 ==========");
 };
 
-// ==================== 6. 启动自检（先等 Supabase 就绪再测库） ====================
+// ==================== 6. 检查并恢复登录状态 ====================
+async function checkAndRestoreSession() {
+    const client = _supabaseClient || initSupabase();
+    if (!client) {
+        console.log("⚠️ Supabase 未就绪，跳过会话检查");
+        return false;
+    }
+
+    try {
+        console.log("🔍 检查登录状态...");
+        const { data: { session }, error } = await client.auth.getSession();
+        
+        if (error) {
+            console.warn("⚠️ 获取会话失败:", error.message);
+            return false;
+        }
+
+        if (session && session.user) {
+            console.log("✅ 发现有效会话，自动恢复登录状态");
+            console.log("用户信息:", {
+                id: session.user.id,
+                email: session.user.email
+            });
+            
+            appState.isLoggedIn = true;
+            appState.isGuest = false;
+            appState.user = {
+                id: session.user.id,
+                email: session.user.email,
+                name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '用户'
+            };
+            
+            // 如果当前在登录页，切换到首页
+            const loginPage = document.getElementById('loginPage');
+            if (loginPage && loginPage.classList.contains('active')) {
+                window.switchPage('swipe');
+            }
+            
+            return true;
+        } else {
+            console.log("ℹ️ 未发现有效会话，需要登录");
+            return false;
+        }
+    } catch (err) {
+        console.error("❌ 检查会话时发生异常:", err);
+        return false;
+    }
+}
+
+// ==================== 7. 启动自检（先等 Supabase 就绪再测库） ====================
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("BOSS KILL 系统加载完成");
 
@@ -254,6 +482,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.warn("⚠️ Supabase 未就绪，已切换至【离线预览模式】。请确认：1) HTML 中已加入 <script src=\"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0\"></script> 且在本脚本之前；2) 网络可访问 supabase.co");
         console.log("💡 提示: 在浏览器控制台运行 diagnoseSupabase() 进行详细诊断");
         return;
+    }
+
+    // 检查并恢复登录状态
+    const hasSession = await checkAndRestoreSession();
+    if (hasSession) {
+        console.log("✅ 登录状态已恢复，可以直接使用应用");
     }
 
     // 测试数据库连接

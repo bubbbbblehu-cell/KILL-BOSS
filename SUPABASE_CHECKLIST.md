@@ -6,7 +6,7 @@
 
 1. **登录 Supabase 控制台**
    - 访问：https://supabase.com/dashboard
-   - 选择你的项目：`rjqdxxwurocqsewvtdvf`
+   - 选择你的项目：`rjqdxxwurocqsewvtduf`
 
 2. **获取正确的 API Key**
    - 进入：**Project Settings** → **API**
@@ -68,8 +68,8 @@
 ## 🌐 第四步：检查网络和 CORS
 
 1. **检查项目 URL**
-   - 确认 `main.js` 中的 URL：`https://rjqdxxwurocqsewvtdvf.supabase.co`
-   - 在浏览器中直接访问：`https://rjqdxxwurocqsewvtdvf.supabase.co/rest/v1/`
+   - 确认 `main.js` 中的 URL：`https://rjqdxxwurocqsewvtduf.supabase.co`
+   - 在浏览器中直接访问：`https://rjqdxxwurocqsewvtduf.supabase.co/rest/v1/`
    - 应该能看到 JSON 响应（即使返回错误）
 
 2. **检查 CORS 设置**
@@ -87,7 +87,7 @@ console.log('Supabase:', typeof supabase);
 
 // 测试 2：创建客户端
 const testClient = supabase.createClient(
-  'https://rjqdxxwurocqsewvtdvf.supabase.co',
+  'https://rjqdxxwurocqsewvtduf.supabase.co',
   '你的API_KEY'
 );
 
