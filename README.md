@@ -71,6 +71,29 @@ KILL-BOSS/
     └── MIGRATION_GUIDE.md      # 代码迁移指南
 ```
 
+## 🔐 登录方式
+
+### 邮箱验证码登录（推荐）
+
+1. 输入邮箱地址
+2. 点击"发送验证码"
+3. 检查邮箱（包括垃圾邮件文件夹）
+4. 输入收到的 6 位验证码
+5. 点击"登录"
+
+**注意**：
+- 验证码有效期为 60 秒
+- 每小时每个邮箱最多发送 3-4 封邮件
+- 如果收不到验证码，可以在 Supabase Dashboard 手动创建用户
+
+### 游客模式
+
+点击"以游客身份进入"即可立即体验所有功能（数据不会保存）
+
+### 配置邮件服务
+
+详细配置请查看：[EMAIL_VERIFICATION_SETUP.md](EMAIL_VERIFICATION_SETUP.md)
+
 ## 🚀 快速开始
 
 ### 1. 环境要求
@@ -86,23 +109,31 @@ git clone <repository-url>
 cd KILL-BOSS
 ```
 
-### 3. 配置 Supabase
+### 3. 配置 Supabase（⚠️ 重要）
 
-1. **创建 Supabase 项目**
-   - 访问 [Supabase Dashboard](https://supabase.com/dashboard)
-   - 创建新项目
+#### 快速配置（3分钟）
 
-2. **配置环境变量**
-   - 复制 `.env` 文件
-   - 填入你的 Supabase 项目信息：
-     ```env
-     SUPABASE_URL=https://your-project.supabase.co
-     SUPABASE_ANON_KEY=your-anon-key
-     ```
+**详细步骤请查看：[QUICK_CONFIG_GUIDE.md](QUICK_CONFIG_GUIDE.md)**
 
-3. **更新代码配置**
-   - 编辑 `src/js/config.js`
-   - 更新 `SUPABASE_CONFIG` 中的 URL 和 Key
+1. **获取 API Key**
+   - 访问 [Supabase Dashboard API 设置](https://supabase.com/dashboard/project/rjqdxxwurocqsewvtduf/settings/api)
+   - 复制 **"anon public"** key（以 `eyJ` 开头）
+
+2. **更新配置文件**
+   - 打开 `src/js/config.js`
+   - 将 `SUPABASE_CONFIG.key` 替换为你复制的 key
+   - 保存文件
+
+3. **测试配置**
+   - 刷新浏览器页面
+   - 打开控制台（F12）查看是否有 ✅ 标记
+   - 或运行 `checkSupabaseConfig()` 检查配置
+
+#### 完整配置指南
+
+- **邮箱验证码配置**: [EMAIL_VERIFICATION_SETUP.md](EMAIL_VERIFICATION_SETUP.md)
+- **快速配置指南**: [QUICK_CONFIG_GUIDE.md](QUICK_CONFIG_GUIDE.md)
+- **Supabase 检查清单**: [SUPABASE_CHECKLIST.md](SUPABASE_CHECKLIST.md)
 
 ### 4. 创建数据库表
 
@@ -207,6 +238,15 @@ npm start
 在浏览器控制台运行：
 
 ```javascript
+// 检查 Supabase 配置
+checkSupabaseConfig()
+
+// 测试 Supabase 连接
+testSupabaseConnection()
+
+// 显示配置帮助
+showConfigHelp()
+
 // Supabase 连接诊断
 diagnoseSupabase()
 
@@ -236,7 +276,35 @@ getSupabaseClient().auth.getSession()
 
 ## 🐛 常见问题
 
-### 1. Supabase 连接失败
+### 1. 邮箱验证码相关
+
+#### Q: 提示 "Supabase 对象未定义"
+**原因**: API Key 配置错误或未配置
+
+**解决方案**:
+1. 查看 [QUICK_CONFIG_GUIDE.md](QUICK_CONFIG_GUIDE.md) 配置 API Key
+2. 在控制台运行 `checkSupabaseConfig()` 检查配置
+3. 确保 key 以 `eyJ` 开头
+
+#### Q: 提示 "发送验证码过于频繁"
+**原因**: Supabase 默认限制每小时每个邮箱最多发送 3-4 封邮件
+
+**解决方案**:
+1. 等待 1 小时后重试
+2. 使用不同的邮箱地址
+3. 在 [Supabase Dashboard](https://supabase.com/dashboard/project/rjqdxxwurocqsewvtduf/auth/users) 直接创建用户（推荐）
+4. 配置自定义 SMTP 服务（详见 [EMAIL_VERIFICATION_SETUP.md](EMAIL_VERIFICATION_SETUP.md)）
+
+#### Q: 收不到验证码邮件
+**原因**: 邮件被标记为垃圾邮件或 SMTP 未配置
+
+**解决方案**:
+1. 检查垃圾邮件文件夹
+2. 使用 Gmail 等常见邮箱
+3. 配置自定义 SMTP（详见 [EMAIL_VERIFICATION_SETUP.md](EMAIL_VERIFICATION_SETUP.md)）
+4. 在 Dashboard 手动创建用户
+
+### 2. Supabase 连接失败
 
 参考 `SUPABASE_CHECKLIST.md` 进行排查：
 - 检查 API Key 是否正确
@@ -244,13 +312,13 @@ getSupabaseClient().auth.getSession()
 - 检查网络连接
 - 运行 `diagnoseSupabase()` 诊断
 
-### 2. 模块加载失败
+### 3. 模块加载失败
 
 - 确保使用开发服务器（不是直接打开文件）
 - 检查浏览器控制台的错误信息
 - 确认所有模块文件路径正确
 
-### 3. 数据库表创建失败
+### 4. 数据库表创建失败
 
 - 使用 `database_setup.sql` 文件（不要使用 Markdown 文件）
 - 按照 `SQL_SETUP_GUIDE.md` 的步骤执行

@@ -7,12 +7,23 @@ import { loadSupabaseAndInit, checkAndRestoreSession, getSupabaseClient } from '
 import { updateUser } from './state.js';
 import { switchPage } from './navigation.js';
 import { SUPABASE_CONFIG } from './config.js';
+import { checkSupabaseConfig, showConfigHelp } from './configChecker.js';
 
 /**
  * 初始化应用
  */
 export async function initApp() {
-    console.log("BOSS KILL 系统加载完成");
+    console.log("🚀 BOSS KILL 系统加载完成");
+    
+    // 检查 Supabase 配置
+    console.log("\n");
+    const configOk = checkSupabaseConfig();
+    if (!configOk) {
+        console.log("\n");
+        showConfigHelp();
+        console.log("\n⚠️ 请先配置 Supabase 后再使用邮箱验证码登录功能");
+        console.log("💡 你仍然可以使用【游客模式】体验应用功能\n");
+    }
 
     // 加载 Supabase
     await loadSupabaseAndInit();

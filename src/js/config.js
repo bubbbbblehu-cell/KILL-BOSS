@@ -6,9 +6,15 @@
 // Supabase 配置
 export const SUPABASE_CONFIG = {
     url: 'https://rjqdxxwurocqsewvtduf.supabase.co',
-    // 请到 Supabase 控制台 → Project Settings → API → 复制 "anon" / "public"  key
-    // 注意：如果使用 sb_publishable_ 开头的 key，需要 Supabase JS v2.39.0+
-    key: 'sb_publishable_HDVosfE-j_H7Hogv79aq-A_NwrN0Xsd',
+    // ⚠️ 重要：请到 Supabase Dashboard → Settings → API → 复制 "anon public" key
+    // 正确的 key 格式：以 eyJ 开头的长字符串（JWT token）
+    // 如果使用错误的 key，会导致 "Supabase 对象未定义" 错误
+    // 
+    // 获取步骤：
+    // 1. 访问 https://supabase.com/dashboard/project/rjqdxxwurocqsewvtduf/settings/api
+    // 2. 找到 "Project API keys" 部分
+    // 3. 复制 "anon" / "public" key（不是 service_role key）
+    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqcWR4eHd1cm9jcXNld3Z0ZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3NTU5NzcsImV4cCI6MjA1MjMzMTk3N30.请替换为你的实际key',
     version: '2.39.0'
 };
 

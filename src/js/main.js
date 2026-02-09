@@ -11,6 +11,7 @@ import './auth.js';
 import './navigation.js';
 import './utils.js';
 import './diagnostics.js';
+import './configChecker.js';
 import './app.js';
 
 // 导入功能模块

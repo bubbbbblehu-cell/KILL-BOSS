@@ -47,56 +47,27 @@
                                            id="loginEmail" 
                                            placeholder="请输入邮箱" 
                                            autocomplete="email"
-                                           oninput="handleEmailInput(event)">
+                                           oninput="handleEmailInput(event)"
+                                           onkeypress="if(event.key==='Enter') document.getElementById('sendCodeBtn').click()">
                                     <div class="email-suggestions" id="loginEmailSuggestionsList"></div>
                                 </div>
                             </div>
-                            <button class="btn btn-primary" id="sendLoginCodeBtn" onclick="sendLoginCode()">发送验证码</button>
-                            <div class="form-group" id="loginCodeGroup" style="display: none;">
+                            <div class="form-group" id="loginCodeInput" style="display: none;">
                                 <label class="form-label">验证码</label>
                                 <input type="text" 
                                        class="form-input" 
                                        id="loginCode" 
                                        placeholder="请输入6位验证码" 
                                        maxlength="6"
-                                       autocomplete="off"
-                                       onkeypress="if(event.key==='Enter') handleLogin()">
-                                <div class="form-hint">验证码已发送至您的邮箱，请查收</div>
+                                       autocomplete="one-time-code"
+                                       onkeypress="if(event.key==='Enter') handleLoginWithCode()">
                             </div>
-                            <button class="btn btn-primary" id="loginBtn" style="display: none;" onclick="handleLogin()">登 录</button>
-                            <button class="btn btn-secondary" onclick="switchToRegisterMode()">没有账号？去注册</button>
+                            <button class="btn btn-primary" id="sendCodeBtn" onclick="sendVerificationCode()">发送验证码</button>
+                            <button class="btn btn-primary" id="loginBtn" style="display: none;" onclick="handleLoginWithCode()">登 录</button>
                             <button class="btn btn-guest" onclick="handleGuestLogin()">以游客身份进入</button>
                         </div>
 
-                        <!-- 注册模式 -->
-                        <div id="registerMode" style="display: none;">
-                            <div class="form-group">
-                                <label class="form-label">邮箱</label>
-                                <div class="email-input-wrapper">
-                                    <input type="text" 
-                                           class="form-input" 
-                                           id="registerEmail" 
-                                           placeholder="请输入邮箱（如：user@gmail.com）" 
-                                           autocomplete="email"
-                                           oninput="handleEmailInput(event)">
-                                    <div class="email-suggestions" id="registerEmailSuggestionsList"></div>
-                                </div>
-                            </div>
-                            <button class="btn btn-primary" id="sendRegisterCodeBtn" onclick="sendRegisterCode()">发送验证码</button>
-                            <div class="form-group" id="registerCodeGroup" style="display: none;">
-                                <label class="form-label">验证码</label>
-                                <input type="text" 
-                                       class="form-input" 
-                                       id="registerCode" 
-                                       placeholder="请输入6位验证码" 
-                                       maxlength="6"
-                                       autocomplete="off"
-                                       onkeypress="if(event.key==='Enter') handleRegister()">
-                                <div class="form-hint">验证码已发送至您的邮箱，请查收</div>
-                            </div>
-                            <button class="btn btn-primary" id="registerBtn" style="display: none;" onclick="handleRegister()">验证并登录</button>
-                            <button class="btn btn-secondary" onclick="switchToLoginMode()">已有账号？去登录</button>
-                        </div>
+
                     </div>
                 </div>
 
