@@ -299,6 +299,15 @@ body {
     font-weight: 600;
 }
 
+/* 表单提示文字 */
+.form-hint {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+}
+
 .email-suggestion-item:last-child {
     border-bottom: none;
 }
