@@ -117,7 +117,178 @@ export async function handleLogin(email, password) {
 }
 
 /**
- * 发送验证码
+ * 发送 Magic Link（登录链接）
+ */
+export async function sendMagicLink() {
+    const email = document.getElementById('loginEmail')?.value?.trim();
+    
+    // 输入验证
+    if (!email) {
+        showToast("请输入邮箱地址", 'error');
+        return false;
+    }
+    
+    // 邮箱格式验证
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showToast("请输入有效的邮箱地址", 'error');
+        return false;
+    }
+
+    console.log("📧 ========== 发送登录链接 ==========");
+    console.log("📧 邮箱:", email);
+
+    const client = getSupabaseClient();
+    if (!client) {
+        const errorMsg = "网络连接异常，Supabase 未就绪。请检查：1) 是否已引入 Supabase 脚本 2) 科学上网环境 3) 控制台具体报错";
+        showToast(errorMsg, 'error', 5000);
+        console.error("❌", errorMsg);
+        return false;
+    }
+
+    // 设置按钮加载状态
+    const sendBtn = document.getElementById('sendMagicLinkBtn');
+    const originalText = sendBtn?.textContent;
+    
+    if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.textContent = '发送中...';
+        sendBtn.style.opacity = '0.7';
+    }
+
+    try {
+        console.log("⏳ 正在发送登录链接...");
+        const { data, error } = await client.auth.signInWithOtp({
+            email: email,
+            options: {
+                shouldCreateUser: true, // 如果用户不存在，自动创建
+                emailRedirectTo: window.location.origin
+            }
+        });
+
+        if (error) {
+            console.error("❌ 发送登录链接失败");
+            console.error("错误代码:", error.status || error.code);
+            console.error("错误消息:", error.message);
+            console.error("完整错误:", error);
+            
+            let errorMsg = "发送登录链接失败";
+            let showCountdown = false;
+            let waitSeconds = 60;
+            
+            // 处理不同类型的错误
+            if (error.status === 429 || error.code === 429 || 
+                error.message?.includes('rate limit') || 
+                error.message?.includes('too many') ||
+                error.message?.includes('email rate limit exceeded')) {
+                waitSeconds = 3600; // 1小时
+                
+                const match = error.message?.match(/(\d+)\s*(seconds?|秒|分钟|minutes?|小时|hours?)/i);
+                if (match) {
+                    waitSeconds = parseInt(match[1]);
+                    if (match[2]?.toLowerCase().includes('minute') || match[2]?.includes('分钟')) {
+                        waitSeconds *= 60;
+                    } else if (match[2]?.toLowerCase().includes('hour') || match[2]?.includes('小时')) {
+                        waitSeconds *= 3600;
+                    }
+                }
+                
+                const waitMinutes = Math.ceil(waitSeconds / 60);
+                const waitHours = Math.floor(waitSeconds / 3600);
+                const waitTimeText = waitHours > 0 
+                    ? `${waitHours} 小时` 
+                    : `${waitMinutes} 分钟`;
+                
+                errorMsg = `发送过于频繁，请等待 ${waitTimeText} 后重试`;
+                showCountdown = true;
+                
+                setTimeout(() => {
+                    showRateLimitSolution(email, waitTimeText);
+                }, 500);
+            } else if (error.message?.includes('Invalid email') || error.message?.includes('email')) {
+                errorMsg = "邮箱格式不正确，请检查后重试";
+            } else {
+                errorMsg = "发送失败: " + (error.message || '未知错误');
+            }
+            
+            showToast(errorMsg, 'error', 5000);
+            console.log("📧 ========== 发送失败 ==========");
+            
+            // 恢复按钮状态
+            if (sendBtn) {
+                sendBtn.disabled = false;
+                sendBtn.textContent = originalText || '发送登录链接';
+                sendBtn.style.opacity = '1';
+            }
+            
+            if (showCountdown) {
+                startErrorCountdown(sendBtn, waitSeconds);
+            }
+            
+            return false;
+        } else {
+            console.log("✅ 登录链接已发送！");
+            console.log("📧 请检查邮箱:", email);
+            
+            showToast("登录链接已发送至邮箱，请查收", 'success', 5000);
+            
+            // 显示提示信息
+            const hint = document.getElementById('magicLinkHint');
+            if (hint) {
+                hint.style.display = 'block';
+            }
+            
+            // 记住登录邮箱
+            saveLastLoginEmail(email);
+            
+            // 恢复按钮状态，但保持禁用一段时间
+            if (sendBtn) {
+                sendBtn.textContent = '已发送';
+                startMagicLinkCountdown(sendBtn, 60);
+            }
+            
+            console.log("📧 ========== 发送完成 ==========");
+            return true;
+        }
+    } catch (err) {
+        console.error("❌ 发送登录链接过程发生异常:", err);
+        showToast("发送登录链接时发生错误，请稍后重试", 'error');
+        
+        // 恢复按钮状态
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.textContent = originalText || '发送登录链接';
+            sendBtn.style.opacity = '1';
+        }
+        return false;
+    }
+}
+
+/**
+ * 开始 Magic Link 发送倒计时
+ */
+function startMagicLinkCountdown(button, seconds) {
+    if (!button) return;
+    
+    let countdown = seconds;
+    button.disabled = true;
+    
+    const timer = setInterval(() => {
+        button.textContent = `重新发送(${countdown}秒)`;
+        countdown--;
+        
+        if (countdown < 0) {
+            clearInterval(timer);
+            button.disabled = false;
+            button.textContent = '重新发送登录链接';
+            button.style.opacity = '1';
+        }
+    }, 1000);
+}
+
+/**
+ * 发送验证码（已废弃，改用 Magic Link）
+ * @deprecated 已改用 Magic Link 登录
  */
 export async function sendVerificationCode() {
     const email = document.getElementById('loginEmail')?.value?.trim();
@@ -158,6 +329,10 @@ export async function sendVerificationCode() {
 
     try {
         console.log("⏳ 正在发送验证码...");
+        
+        // Supabase 的 signInWithOtp 默认发送 Magic Link（魔法链接）
+        // 如果需要 6 位数字验证码，需要在 Supabase Dashboard 中配置
+        // 目前使用 Magic Link 方式（用户点击邮件中的链接即可登录）
         const { data, error } = await client.auth.signInWithOtp({
             email: email,
             options: {
@@ -826,8 +1001,9 @@ export function setupAuthListener() {
 }
 
 // 导出到 window 对象，供 HTML 调用
-window.sendVerificationCode = sendVerificationCode;
-window.handleLoginWithCode = handleLoginWithCode;
+window.sendMagicLink = sendMagicLink;
+window.sendVerificationCode = sendVerificationCode; // 保留兼容性
+window.handleLoginWithCode = handleLoginWithCode; // 保留兼容性
 window.restoreLastLoginEmail = restoreLastLoginEmail;
 
 window.handleRegister = async function() {

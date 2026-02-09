@@ -73,26 +73,33 @@ KILL-BOSS/
 
 ## 🔐 登录方式
 
-### 邮箱验证码登录（推荐）
+### Magic Link 登录（推荐）
 
 1. 输入邮箱地址
-2. 点击"发送验证码"
+2. 点击"发送登录链接"
 3. 检查邮箱（包括垃圾邮件文件夹）
-4. 输入收到的 6 位验证码
-5. 点击"登录"
+4. 点击邮件中的 **"Log In"** 链接
+5. 自动登录并跳转到首页
+
+**特点**：
+- ✅ 无需密码，更安全
+- ✅ 点击即登录，更便捷
+- ✅ 自动创建用户（首次登录即注册）
+- ✅ 链接有效期 1 小时
 
 **注意**：
-- 验证码有效期为 60 秒
 - 每小时每个邮箱最多发送 3-4 封邮件
-- 如果收不到验证码，可以在 Supabase Dashboard 手动创建用户
+- 邮件可能在垃圾邮件文件夹
+- 如果收不到邮件，可以在 Supabase Dashboard 手动创建用户
 
 ### 游客模式
 
 点击"以游客身份进入"即可立即体验所有功能（数据不会保存）
 
-### 配置邮件服务
+### 详细说明
 
-详细配置请查看：[EMAIL_VERIFICATION_SETUP.md](EMAIL_VERIFICATION_SETUP.md)
+- **[MAGIC_LINK_LOGIN.md](MAGIC_LINK_LOGIN.md)** - Magic Link 使用说明
+- **[EMAIL_VERIFICATION_SETUP.md](EMAIL_VERIFICATION_SETUP.md)** - 邮件配置指南
 
 ## 🚀 快速开始
 
@@ -276,18 +283,28 @@ getSupabaseClient().auth.getSession()
 
 ## 🐛 常见问题
 
-### 1. 邮箱验证码相关
+### Q1: 邮箱登录相关
+
+#### Q: 收到邮件但没有验证码，只有一个链接？
+**说明**: 这是正常的！系统使用的是 **Magic Link（魔法链接）** 登录方式。
+
+**使用方法**:
+1. 打开邮件
+2. 点击邮件中的 **"Log In"** 链接
+3. 自动登录并跳转到应用
+
+**详细说明**: 查看 [MAGIC_LINK_LOGIN.md](MAGIC_LINK_LOGIN.md)
 
 #### Q: 提示 "Supabase 对象未定义"
-**原因**: API Key 配置错误或未配置
+**原因**: API Key 未配置或配置错误
 
 **解决方案**:
 1. 查看 [QUICK_CONFIG_GUIDE.md](QUICK_CONFIG_GUIDE.md) 配置 API Key
-2. 在控制台运行 `checkSupabaseConfig()` 检查配置
+2. 在控制台运行 `checkSupabaseConfig()`
 3. 确保 key 以 `eyJ` 开头
 
-#### Q: 提示 "发送验证码过于频繁"
-**原因**: Supabase 默认限制每小时每个邮箱最多发送 3-4 封邮件
+#### Q: 提示 "发送过于频繁"
+**原因**: Supabase 限制每小时每个邮箱最多发送 3-4 封邮件
 
 **解决方案**:
 1. 等待 1 小时后重试
@@ -295,16 +312,25 @@ getSupabaseClient().auth.getSession()
 3. 在 [Supabase Dashboard](https://supabase.com/dashboard/project/rjqdxxwurocqsewvtduf/auth/users) 直接创建用户（推荐）
 4. 配置自定义 SMTP 服务（详见 [EMAIL_VERIFICATION_SETUP.md](EMAIL_VERIFICATION_SETUP.md)）
 
-#### Q: 收不到验证码邮件
-**原因**: 邮件被标记为垃圾邮件或 SMTP 未配置
+#### Q: 收不到邮件
+**原因**: 邮件被标记为垃圾邮件
 
 **解决方案**:
 1. 检查垃圾邮件文件夹
-2. 使用 Gmail 等常见邮箱
-3. 配置自定义 SMTP（详见 [EMAIL_VERIFICATION_SETUP.md](EMAIL_VERIFICATION_SETUP.md)）
-4. 在 Dashboard 手动创建用户
+2. 等待 2-3 分钟（邮件可能延迟）
+3. 使用 Gmail 等常见邮箱
+4. 配置自定义 SMTP（详见 [EMAIL_VERIFICATION_SETUP.md](EMAIL_VERIFICATION_SETUP.md)）
+5. 在 Dashboard 手动创建用户
 
-### 2. Supabase 连接失败
+#### Q: 点击链接后没有登录？
+**原因**: 链接已过期或已被使用
+
+**解决方案**:
+1. 重新发送登录链接
+2. 确保在 1 小时内点击
+3. 检查浏览器是否阻止弹窗
+
+### Q2: Supabase 连接失败
 
 参考 `SUPABASE_CHECKLIST.md` 进行排查：
 - 检查 API Key 是否正确
@@ -312,13 +338,13 @@ getSupabaseClient().auth.getSession()
 - 检查网络连接
 - 运行 `diagnoseSupabase()` 诊断
 
-### 3. 模块加载失败
+### Q3: 模块加载失败
 
 - 确保使用开发服务器（不是直接打开文件）
 - 检查浏览器控制台的错误信息
 - 确认所有模块文件路径正确
 
-### 4. 数据库表创建失败
+### Q4: 数据库表创建失败
 
 - 使用 `database_setup.sql` 文件（不要使用 Markdown 文件）
 - 按照 `SQL_SETUP_GUIDE.md` 的步骤执行
