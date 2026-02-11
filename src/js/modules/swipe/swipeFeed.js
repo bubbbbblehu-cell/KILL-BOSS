@@ -20,6 +20,16 @@ export async function initSwipeFeed() {
 }
 
 /**
+ * 刷新Feed（用于发帖后更新）
+ */
+export async function refreshSwipeFeed() {
+    console.log("🔄 刷新滑动Feed...");
+    currentPostIndex = 0;
+    await loadPosts();
+    renderPosts();
+}
+
+/**
  * 加载帖子列表
  */
 async function loadPosts() {
@@ -441,6 +451,9 @@ window.showComments = function(postId) {
     console.log("显示评论:", postId);
     // 将在 comments.js 中实现
 };
+
+window.initSwipeFeed = initSwipeFeed;
+window.refreshSwipeFeed = refreshSwipeFeed;
 
 // 页面切换时初始化
 window.addEventListener('swipePageActive', () => {

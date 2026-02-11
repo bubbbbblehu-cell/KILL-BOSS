@@ -95,13 +95,90 @@
                             <span class="nav-icon">🏠</span>
                             <span class="nav-label">首页</span>
                         </div>
-                        <div class="nav-item" onclick="switchPage('map')">
-                            <span class="nav-icon">🗺️</span>
-                            <span class="nav-label">地图</span>
+                        <div class="nav-item nav-item-post" onclick="switchPage('post')">
+                            <span class="nav-icon nav-icon-post">➕</span>
+                            <span class="nav-label">发帖</span>
                         </div>
-                        <div class="nav-item" onclick="switchPage('draw')">
-                            <span class="nav-icon">🎨</span>
-                            <span class="nav-label">画画</span>
+                        <div class="nav-item" onclick="switchPage('profile')">
+                            <span class="nav-icon">👤</span>
+                            <span class="nav-label">我的</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 发帖页面 -->
+                <div class="page post-page" id="postPage">
+                    <div class="page-header">
+                        <button class="btn-back" onclick="switchPage('swipe')">← 返回</button>
+                        <span class="page-title">✍️ 发个帖子</span>
+                        <button class="btn-publish" id="publishBtn" onclick="publishPost()">发布</button>
+                    </div>
+                    
+                    <!-- 画布区域 -->
+                    <div class="post-canvas-section">
+                        <div class="canvas-wrapper">
+                            <canvas class="post-canvas" id="postCanvas" width="335" height="335"></canvas>
+                            <div class="canvas-placeholder" id="canvasPlaceholder">
+                                <div class="placeholder-icon">🎨</div>
+                                <div class="placeholder-text">点击开始画画</div>
+                            </div>
+                        </div>
+                        <div class="canvas-tools">
+                            <button class="tool-btn" onclick="clearPostCanvas()" title="清空画布">🗑️</button>
+                            <button class="tool-btn" onclick="undoPostCanvas()" title="撤销">↩️</button>
+                            <button class="tool-btn" onclick="togglePostStickers()" title="贴纸">😀</button>
+                        </div>
+                    </div>
+
+                    <!-- 颜色选择器 -->
+                    <div class="post-color-picker" id="postColorPicker">
+                        <div class="color-dot active" style="background: #000" onclick="setPostColor('#000', this)"></div>
+                        <div class="color-dot" style="background: #ff0000" onclick="setPostColor('#ff0000', this)"></div>
+                        <div class="color-dot" style="background: #ff6b35" onclick="setPostColor('#ff6b35', this)"></div>
+                        <div class="color-dot" style="background: #ffc107" onclick="setPostColor('#ffc107', this)"></div>
+                        <div class="color-dot" style="background: #10b981" onclick="setPostColor('#10b981', this)"></div>
+                        <div class="color-dot" style="background: #3b82f6" onclick="setPostColor('#3b82f6', this)"></div>
+                        <div class="color-dot" style="background: #8b5cf6" onclick="setPostColor('#8b5cf6', this)"></div>
+                        <div class="color-dot" style="background: #ec4899" onclick="setPostColor('#ec4899', this)"></div>
+                    </div>
+
+                    <!-- 贴纸面板 -->
+                    <div class="post-sticker-panel" id="postStickerPanel" style="display: none;">
+                        <div class="sticker-grid">
+                            <span class="sticker-item" onclick="addPostSticker('👔')">👔</span>
+                            <span class="sticker-item" onclick="addPostSticker('👓')">👓</span>
+                            <span class="sticker-item" onclick="addPostSticker('😤')">😤</span>
+                            <span class="sticker-item" onclick="addPostSticker('😡')">😡</span>
+                            <span class="sticker-item" onclick="addPostSticker('💩')">💩</span>
+                            <span class="sticker-item" onclick="addPostSticker('🔥')">🔥</span>
+                            <span class="sticker-item" onclick="addPostSticker('💰')">💰</span>
+                            <span class="sticker-item" onclick="addPostSticker('📱')">📱</span>
+                            <span class="sticker-item" onclick="addPostSticker('💼')">💼</span>
+                            <span class="sticker-item" onclick="addPostSticker('🧑‍💼')">🧑‍💼</span>
+                        </div>
+                    </div>
+
+                    <!-- 文字输入区域 -->
+                    <div class="post-text-section">
+                        <textarea 
+                            class="post-textarea" 
+                            id="postTextarea" 
+                            placeholder="说点什么吧...（选填）"
+                            maxlength="500"
+                            oninput="updatePostCharCount()"></textarea>
+                        <div class="post-char-count">
+                            <span id="postCharCount">0</span>/500
+                        </div>
+                    </div>
+
+                    <div class="bottom-nav">
+                        <div class="nav-item" onclick="switchPage('swipe')">
+                            <span class="nav-icon">🏠</span>
+                            <span class="nav-label">首页</span>
+                        </div>
+                        <div class="nav-item nav-item-post active" onclick="switchPage('post')">
+                            <span class="nav-icon nav-icon-post">➕</span>
+                            <span class="nav-label">发帖</span>
                         </div>
                         <div class="nav-item" onclick="switchPage('profile')">
                             <span class="nav-icon">👤</span>
@@ -138,13 +215,9 @@
                             <span class="nav-icon">🏠</span>
                             <span class="nav-label">首页</span>
                         </div>
-                        <div class="nav-item active" onclick="switchPage('map')">
-                            <span class="nav-icon">🗺️</span>
-                            <span class="nav-label">地图</span>
-                        </div>
-                        <div class="nav-item" onclick="switchPage('draw')">
-                            <span class="nav-icon">🎨</span>
-                            <span class="nav-label">画画</span>
+                        <div class="nav-item nav-item-post" onclick="switchPage('post')">
+                            <span class="nav-icon nav-icon-post">➕</span>
+                            <span class="nav-label">发帖</span>
                         </div>
                         <div class="nav-item" onclick="switchPage('profile')">
                             <span class="nav-icon">👤</span>
@@ -198,13 +271,9 @@
                             <span class="nav-icon">🏠</span>
                             <span class="nav-label">首页</span>
                         </div>
-                        <div class="nav-item" onclick="switchPage('map')">
-                            <span class="nav-icon">🗺️</span>
-                            <span class="nav-label">地图</span>
-                        </div>
-                        <div class="nav-item active" onclick="switchPage('draw')">
-                            <span class="nav-icon">🎨</span>
-                            <span class="nav-label">画画</span>
+                        <div class="nav-item nav-item-post" onclick="switchPage('post')">
+                            <span class="nav-icon nav-icon-post">➕</span>
+                            <span class="nav-label">发帖</span>
                         </div>
                         <div class="nav-item" onclick="switchPage('profile')">
                             <span class="nav-icon">👤</span>
@@ -276,13 +345,9 @@
                             <span class="nav-icon">🏠</span>
                             <span class="nav-label">首页</span>
                         </div>
-                        <div class="nav-item" onclick="switchPage('map')">
-                            <span class="nav-icon">🗺️</span>
-                            <span class="nav-label">地图</span>
-                        </div>
-                        <div class="nav-item" onclick="switchPage('draw')">
-                            <span class="nav-icon">🎨</span>
-                            <span class="nav-label">画画</span>
+                        <div class="nav-item nav-item-post" onclick="switchPage('post')">
+                            <span class="nav-icon nav-icon-post">➕</span>
+                            <span class="nav-label">发帖</span>
                         </div>
                         <div class="nav-item active" onclick="switchPage('profile')">
                             <span class="nav-icon">👤</span>

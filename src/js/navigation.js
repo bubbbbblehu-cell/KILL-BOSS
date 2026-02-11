@@ -22,6 +22,24 @@ export function switchPage(pageName) {
             }, 100);
         }
         
+        // 如果切换到发帖页面，初始化画布
+        if (pageName === 'post') {
+            setTimeout(() => {
+                if (window.initCreatePost) {
+                    window.initCreatePost();
+                }
+            }, 100);
+        }
+        
+        // 如果切换到首页，刷新Feed
+        if (pageName === 'swipe') {
+            setTimeout(() => {
+                if (window.initSwipeFeed) {
+                    window.initSwipeFeed();
+                }
+            }, 100);
+        }
+        
         // 触发页面激活事件
         window.dispatchEvent(new CustomEvent(`${pageName}PageActive`));
     }

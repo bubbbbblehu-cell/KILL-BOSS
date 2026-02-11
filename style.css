@@ -1907,3 +1907,304 @@ body {
         justify-content: center;
     }
 }
+
+/* ========== 发帖页面 ========== */
+.post-page {
+    background: var(--bg-dark);
+}
+
+.post-page .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 45px 15px 15px;
+}
+
+.btn-back {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px;
+    transition: color 0.3s;
+}
+
+.btn-back:hover {
+    color: var(--text-primary);
+}
+
+.btn-publish {
+    background: var(--accent-orange);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-publish:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: scale(1.05);
+}
+
+.btn-publish:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 画布区域 */
+.post-canvas-section {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.canvas-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 335px;
+    aspect-ratio: 1;
+}
+
+.post-canvas {
+    width: 100%;
+    height: 100%;
+    background: white;
+    border-radius: 16px;
+    cursor: crosshair;
+    touch-action: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.canvas-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.placeholder-icon {
+    font-size: 64px;
+    margin-bottom: 12px;
+    opacity: 0.3;
+}
+
+.placeholder-text {
+    font-size: 14px;
+    color: #999;
+}
+
+.canvas-tools {
+    display: flex;
+    gap: 10px;
+}
+
+.canvas-tools .tool-btn {
+    width: 44px;
+    height: 44px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.canvas-tools .tool-btn:hover {
+    background: var(--bg-input);
+    transform: scale(1.05);
+}
+
+.canvas-tools .tool-btn:active {
+    transform: scale(0.95);
+}
+
+/* 颜色选择器 */
+.post-color-picker {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.post-color-picker .color-dot {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.post-color-picker .color-dot:hover {
+    transform: scale(1.15);
+}
+
+.post-color-picker .color-dot.active {
+    transform: scale(1.2);
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--bg-dark), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 贴纸面板 */
+.post-sticker-panel {
+    margin: 0 20px 15px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 15px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.post-sticker-panel .sticker-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+.post-sticker-panel .sticker-item {
+    font-size: 32px;
+    text-align: center;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 10px;
+    transition: all 0.3s;
+}
+
+.post-sticker-panel .sticker-item:hover {
+    background: var(--bg-input);
+    transform: scale(1.15);
+}
+
+.post-sticker-panel .sticker-item:active {
+    transform: scale(0.95);
+}
+
+/* 文字输入区域 */
+.post-text-section {
+    padding: 0 20px 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.post-textarea {
+    width: 100%;
+    min-height: 120px;
+    max-height: 200px;
+    padding: 15px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.post-textarea:focus {
+    border-color: var(--accent-orange);
+}
+
+.post-textarea::placeholder {
+    color: var(--text-secondary);
+}
+
+.post-char-count {
+    text-align: right;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    padding-right: 5px;
+}
+
+.post-char-count #postCharCount {
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+
+/* 发帖按钮特殊样式 */
+.nav-item-post {
+    position: relative;
+}
+
+.nav-icon-post {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--accent-orange), var(--accent-yellow));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+    transition: all 0.3s;
+}
+
+.nav-item-post:hover .nav-icon-post {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 6px 16px rgba(255, 107, 53, 0.6);
+}
+
+.nav-item-post.active .nav-icon-post {
+    transform: scale(1.15) rotate(45deg);
+}
+
+/* 发帖页面底部导航调整 */
+.post-page .bottom-nav {
+    padding-bottom: 15px;
+}
+
+/* 作品列表样式 */
+.works-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.work-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px;
+    transition: all 0.3s;
+}
+
+.work-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.work-item img {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.no-posts {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    grid-column: 1 / -1;
+}
+
+
