@@ -157,11 +157,11 @@ export async function sendMagicLink() {
     }
 
     try {
-        console.log("⏳ 正在发送登录链接...");
+        console.log("正在发送登录链接...");
         const { data, error } = await client.auth.signInWithOtp({
             email: email,
             options: {
-                shouldCreateUser: true, // 如果用户不存在，自动创建
+                shouldCreateUser: true,
                 emailRedirectTo: window.location.origin
             }
         });
@@ -328,15 +328,12 @@ export async function sendVerificationCode() {
     }
 
     try {
-        console.log("⏳ 正在发送验证码...");
+        console.log("正在发送验证码...");
         
-        // Supabase 的 signInWithOtp 默认发送 Magic Link（魔法链接）
-        // 如果需要 6 位数字验证码，需要在 Supabase Dashboard 中配置
-        // 目前使用 Magic Link 方式（用户点击邮件中的链接即可登录）
         const { data, error } = await client.auth.signInWithOtp({
             email: email,
             options: {
-                shouldCreateUser: true, // 如果用户不存在，自动创建
+                shouldCreateUser: true,
                 emailRedirectTo: window.location.origin
             }
         });

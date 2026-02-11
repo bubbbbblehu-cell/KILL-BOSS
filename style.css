@@ -124,11 +124,11 @@ body {
 }
 
 .nav-icon {
-    font-size: 24px;
+    font-size: 28px;
 }
 
 .nav-label {
-    font-size: 10px;
+    font-size: 11px;
     color: var(--text-secondary);
 }
 
@@ -2147,14 +2147,14 @@ body {
 }
 
 .nav-icon-post {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     background: linear-gradient(135deg, var(--accent-orange), var(--accent-yellow));
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 28px;
     box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
     transition: all 0.3s;
 }
