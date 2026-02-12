@@ -1,17 +1,17 @@
 /**
- * 页面导航模块
- * 处理页面切换和导航相关功能
+ * Page Navigation Module
+ * Handle page switching and navigation
  */
 
 /**
- * 切换页面
+ * Switch page
  */
 export function switchPage(pageName) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const target = document.getElementById(pageName + 'Page');
     if (target) {
         target.classList.add('active');
-        console.log("已切换到页面:", pageName);
+        console.log("Switched to page:", pageName);
         
         // 如果切换到登录页面，恢复上次登录的邮箱
         if (pageName === 'login') {

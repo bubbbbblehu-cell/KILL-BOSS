@@ -1,24 +1,24 @@
 /**
- * 划一划发帖模块 - 榜单功能
- * 处理今日榜单、周榜、月榜、年榜
+ * Swipe Feed Module - Leaderboard Feature
+ * Handle daily, weekly, monthly, yearly leaderboards
  */
 
 import { getSupabaseClient } from '../../supabase.js';
 
-let currentLeaderboardType = 'today'; // today, week, month, year
+let currentLeaderboardType = 'today';
 
 /**
- * 初始化榜单
+ * Initialize leaderboard
  */
 export async function initLeaderboard() {
-    console.log("🏆 初始化榜单...");
+    console.log("Initialize leaderboard...");
     setupLeaderboardTabs();
     await loadLeaderboard('today');
     updateLeaderboardTitle('today');
 }
 
 /**
- * 设置榜单标签切换
+ * Setup leaderboard tab switching
  */
 function setupLeaderboardTabs() {
     const tabs = document.querySelectorAll('.leaderboard-tab');
@@ -31,26 +31,23 @@ function setupLeaderboardTabs() {
 }
 
 /**
- * 切换榜单类型
+ * Switch leaderboard type
  */
 export async function switchLeaderboard(type) {
     currentLeaderboardType = type;
-    console.log("📊 切换到榜单:", type);
+    console.log("Switch to leaderboard:", type);
     
-    // 更新标签状态
     document.querySelectorAll('.leaderboard-tab').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.type === type);
     });
     
-    // 更新标题
     updateLeaderboardTitle(type);
     
-    // 加载对应榜单数据
     await loadLeaderboard(type);
 }
 
 /**
- * 加载榜单数据
+ * Load leaderboard data
  */
 async function loadLeaderboard(type) {
     const client = getSupabaseClient();
@@ -58,17 +55,15 @@ async function loadLeaderboard(type) {
     
     if (!bannerScroll) return;
 
-    // 计算时间范围
     const { startDate, endDate } = getDateRange(type);
     
     if (!client) {
-        console.warn("⚠️ Supabase 未就绪，使用模拟数据");
+        console.warn("Supabase not ready, using mock data");
         renderLeaderboard(bannerScroll, getMockLeaderboard());
         return;
     }
 
     try {
-        // 先查询帖子
         const { data: postsData, error: postsError } = await client
             .from('posts')
             .select('*')
@@ -81,7 +76,6 @@ async function loadLeaderboard(type) {
             throw postsError;
         }
 
-        // 获取用户ID并查询用户信息
         const userIds = [...new Set((postsData || []).map(p => p.user_id))];
         let usersMap = {};
         
@@ -103,30 +97,28 @@ async function loadLeaderboard(type) {
                     }, {});
                 }
             } catch (usersErr) {
-                console.warn("⚠️ 查询用户信息失败（users 表可能不存在）:", usersErr);
-                // 继续执行，使用默认用户信息
+                console.warn("Failed to query users:", usersErr);
             }
         }
 
-        // 合并数据
         const data = (postsData || []).map(post => ({
             ...post,
             user: usersMap[post.user_id] || {
                 id: post.user_id,
-                name: post.user_id.split('-')[0] || '用户',
+                name: post.user_id.split('-')[0] || 'User',
                 avatar: null
             }
         }));
 
         renderLeaderboard(bannerScroll, data || []);
     } catch (err) {
-        console.error("❌ 加载榜单异常:", err);
+        console.error("Failed to load leaderboard:", err);
         renderLeaderboard(bannerScroll, getMockLeaderboard());
     }
 }
 
 /**
- * 获取时间范围
+ * Get date range
  */
 function getDateRange(type) {
     const now = new Date();
@@ -160,11 +152,11 @@ function getDateRange(type) {
 }
 
 /**
- * 渲染榜单
+ * Render leaderboard
  */
 function renderLeaderboard(container, posts) {
     if (posts.length === 0) {
-        container.innerHTML = '<div class="no-leaderboard">暂无数据</div>';
+        container.innerHTML = '<div class="no-leaderboard">No data</div>';
         return;
     }
 
@@ -177,11 +169,11 @@ function renderLeaderboard(container, posts) {
             </div>
             <div class="leaderboard-content">
                 <div class="leaderboard-preview">
-                    ${post.image_url ? `<img src="${post.image_url}" alt="帖子预览" class="leaderboard-image">` : ''}
+                    ${post.image_url ? `<img src="${post.image_url}" alt="Post preview" class="leaderboard-image">` : ''}
                     ${post.text_content ? `<p class="leaderboard-text">${post.text_content.substring(0, 30)}${post.text_content.length > 30 ? '...' : ''}</p>` : ''}
                 </div>
                 <div class="leaderboard-info">
-                    <div class="leaderboard-author">${post.user?.name || '匿名用户'}</div>
+                    <div class="leaderboard-author">${post.user?.name || 'Anonymous'}</div>
                     <div class="leaderboard-stats">
                         <span class="stat-item">👍 ${post.likes_count || 0}</span>
                         <span class="stat-item">💬 ${post.comments_count || 0}</span>
@@ -193,42 +185,42 @@ function renderLeaderboard(container, posts) {
 }
 
 /**
- * 更新榜单标题
+ * Update leaderboard title
  */
 export function updateLeaderboardTitle(type) {
     const titleMap = {
-        today: '今日榜单',
-        week: '本周榜单',
-        month: '本月榜单',
-        year: '本年榜单'
+        today: 'Today',
+        week: 'This Week',
+        month: 'This Month',
+        year: 'This Year'
     };
     
     const titleEl = document.querySelector('.banner-title');
     if (titleEl) {
-        titleEl.textContent = `🔥 ${titleMap[type] || '今日榜单'}`;
+        titleEl.textContent = `🔥 ${titleMap[type] || 'Today'}`;
     }
 }
 
 /**
- * 获取模拟榜单数据
+ * Get mock leaderboard data
  */
 function getMockLeaderboard() {
     return [
         {
             id: 1,
-            user: { name: '用户A' },
+            user: { name: 'User A' },
             likes_count: 123,
             comments_count: 45
         },
         {
             id: 2,
-            user: { name: '用户B' },
+            user: { name: 'User B' },
             likes_count: 89,
             comments_count: 23
         },
         {
             id: 3,
-            user: { name: '用户C' },
+            user: { name: 'User C' },
             likes_count: 67,
             comments_count: 12
         }
@@ -236,13 +228,10 @@ function getMockLeaderboard() {
 }
 
 /**
- * 查看帖子详情
+ * View post details
  */
 window.viewPost = function(postId) {
-    console.log("查看帖子:", postId);
-    // TODO: 实现帖子详情页
-    // 可以跳转到帖子详情或显示弹窗
+    console.log("View post:", postId);
 };
 
-// 导出到 window
 window.switchLeaderboard = switchLeaderboard;

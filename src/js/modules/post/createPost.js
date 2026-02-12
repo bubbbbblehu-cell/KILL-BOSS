@@ -1,6 +1,6 @@
 /**
- * 发帖模块 - 创建帖子功能
- * 处理帖子创建、画图、文字编辑、图片上传等
+ * Post Module - Create Post Feature
+ * Handle post creation, drawing, text editing, image upload
  */
 
 import { getSupabaseClient } from '../../supabase.js';
@@ -8,7 +8,6 @@ import { appState } from '../../state.js';
 import { switchPage } from '../../navigation.js';
 import { showToast } from '../../utils.js';
 
-// 画布相关变量
 let postCanvas = null;
 let postCtx = null;
 let isDrawing = false;
@@ -20,16 +19,16 @@ let historyStep = -1;
 let hasDrawing = false;
 
 /**
- * 初始化发帖页面
+ * Initialize create post page
  */
 export function initCreatePost() {
-    console.log("📝 初始化发帖页面...");
+    console.log("Initialize create post page...");
     setupPostCanvas();
     setupPostForm();
 }
 
 /**
- * 设置发帖画布
+ * Setup post canvas
  */
 function setupPostCanvas() {
     postCanvas = document.getElementById('postCanvas');
@@ -37,33 +36,28 @@ function setupPostCanvas() {
     
     postCtx = postCanvas.getContext('2d');
     
-    // 设置画布背景为白色
     postCtx.fillStyle = '#ffffff';
     postCtx.fillRect(0, 0, postCanvas.width, postCanvas.height);
     
-    // 保存初始状态
     saveCanvasState();
     
-    // 设置画笔样式
     postCtx.strokeStyle = currentColor;
     postCtx.lineWidth = 3;
     postCtx.lineCap = 'round';
     postCtx.lineJoin = 'round';
     
-    // 绑定事件
     postCanvas.addEventListener('mousedown', startDrawing);
     postCanvas.addEventListener('mousemove', draw);
     postCanvas.addEventListener('mouseup', stopDrawing);
     postCanvas.addEventListener('mouseout', stopDrawing);
     
-    // 触摸事件（移动端）
     postCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     postCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     postCanvas.addEventListener('touchend', stopDrawing);
 }
 
 /**
- * 开始绘画
+ * Start drawing
  */
 function startDrawing(e) {
     isDrawing = true;
@@ -71,7 +65,6 @@ function startDrawing(e) {
     lastX = e.clientX - rect.left;
     lastY = e.clientY - rect.top;
     
-    // 隐藏占位符
     const placeholder = document.getElementById('canvasPlaceholder');
     if (placeholder) placeholder.style.display = 'none';
     
@@ -79,7 +72,7 @@ function startDrawing(e) {
 }
 
 /**
- * 绘画
+ * Draw
  */
 function draw(e) {
     if (!isDrawing) return;
@@ -98,7 +91,7 @@ function draw(e) {
 }
 
 /**
- * 停止绘画
+ * Stop drawing
  */
 function stopDrawing() {
     if (isDrawing) {
@@ -108,7 +101,7 @@ function stopDrawing() {
 }
 
 /**
- * 触摸开始
+ * Handle touch start
  */
 function handleTouchStart(e) {
     e.preventDefault();
@@ -118,7 +111,6 @@ function handleTouchStart(e) {
     lastY = touch.clientY - rect.top;
     isDrawing = true;
     
-    // 隐藏占位符
     const placeholder = document.getElementById('canvasPlaceholder');
     if (placeholder) placeholder.style.display = 'none';
     
@@ -126,7 +118,7 @@ function handleTouchStart(e) {
 }
 
 /**
- * 触摸移动
+ * Handle touch move
  */
 function handleTouchMove(e) {
     if (!isDrawing) return;
@@ -147,7 +139,7 @@ function handleTouchMove(e) {
 }
 
 /**
- * 保存画布状态
+ * Save canvas state
  */
 function saveCanvasState() {
     historyStep++;
@@ -158,7 +150,7 @@ function saveCanvasState() {
 }
 
 /**
- * 撤销
+ * Undo
  */
 export function undoPostCanvas() {
     if (historyStep > 0) {
@@ -173,16 +165,15 @@ export function undoPostCanvas() {
 }
 
 /**
- * 清空画布
+ * Clear canvas
  */
 export function clearPostCanvas() {
-    if (!confirm('确定要清空画布吗？')) return;
+    if (!confirm('Clear canvas?')) return;
     
     postCtx.fillStyle = '#ffffff';
     postCtx.fillRect(0, 0, postCanvas.width, postCanvas.height);
     postCtx.fillStyle = currentColor;
     
-    // 显示占位符
     const placeholder = document.getElementById('canvasPlaceholder');
     if (placeholder) placeholder.style.display = 'flex';
     
@@ -191,13 +182,12 @@ export function clearPostCanvas() {
 }
 
 /**
- * 设置颜色
+ * Set color
  */
 export function setPostColor(color, element) {
     currentColor = color;
     postCtx.strokeStyle = color;
     
-    // 更新选中状态
     document.querySelectorAll('#postColorPicker .color-dot').forEach(dot => {
         dot.classList.remove('active');
     });
@@ -207,7 +197,7 @@ export function setPostColor(color, element) {
 }
 
 /**
- * 切换贴纸面板
+ * Toggle sticker panel
  */
 export function togglePostStickers() {
     const panel = document.getElementById('postStickerPanel');
@@ -217,33 +207,29 @@ export function togglePostStickers() {
 }
 
 /**
- * 添加贴纸
+ * Add sticker
  */
 export function addPostSticker(emoji) {
-    // 在画布中心添加贴纸
     postCtx.font = '48px Arial';
     postCtx.fillText(emoji, postCanvas.width / 2 - 24, postCanvas.height / 2 + 16);
     
-    // 隐藏占位符
     const placeholder = document.getElementById('canvasPlaceholder');
     if (placeholder) placeholder.style.display = 'none';
     
     hasDrawing = true;
     saveCanvasState();
     
-    // 隐藏贴纸面板
     togglePostStickers();
 }
 
 /**
- * 设置发帖表单
+ * Setup post form
  */
 function setupPostForm() {
-    // 字数统计已在 HTML 中通过 oninput 实现
 }
 
 /**
- * 更新字数统计
+ * Update character count
  */
 export function updatePostCharCount() {
     const textarea = document.getElementById('postTextarea');
@@ -254,20 +240,18 @@ export function updatePostCharCount() {
 }
 
 /**
- * 发布帖子
+ * Publish post
  */
 export async function publishPost() {
     const textContent = document.getElementById('postTextarea')?.value?.trim();
     
-    // 检查是否有内容
     if (!hasDrawing && !textContent) {
-        showToast("请画点什么或写点什么吧~", 'error');
+        showToast("Please draw or write something", 'error');
         return;
     }
     
-    // 检查登录状态
     if (!appState.user || appState.isGuest) {
-        showToast("游客模式不能发帖，请先登录", 'error');
+        showToast("Guest mode cannot post, please login", 'error');
         setTimeout(() => {
             switchPage('login');
         }, 1500);
@@ -276,33 +260,30 @@ export async function publishPost() {
     
     const client = getSupabaseClient();
     if (!client) {
-        showToast("网络连接异常", 'error');
+        showToast("Network error", 'error');
         return;
     }
     
-    // 设置按钮加载状态
     const publishBtn = document.getElementById('publishBtn');
     const originalText = publishBtn?.textContent;
     if (publishBtn) {
         publishBtn.disabled = true;
-        publishBtn.textContent = '发布中...';
+        publishBtn.textContent = 'Publishing...';
     }
     
     try {
-        console.log("📤 正在发布帖子...");
+        console.log("Publishing post...");
         
-        // 上传画布图片（如果有绘画）
         let imageUrl = null;
         if (hasDrawing) {
             imageUrl = await uploadCanvasImage();
         }
         
-        // 创建帖子
         const { data, error } = await client
             .from('posts')
             .insert({
                 user_id: appState.user.id,
-                user_name: appState.user.name || appState.user.email?.split('@')[0] || '用户',
+                user_name: appState.user.name || appState.user.email?.split('@')[0] || 'User',
                 text_content: textContent || null,
                 image_url: imageUrl,
                 likes_count: 0,
@@ -313,21 +294,18 @@ export async function publishPost() {
             .single();
         
         if (error) {
-            console.error("❌ 发布失败:", error);
-            showToast("发布失败: " + error.message, 'error');
+            console.error("Publish failed:", error);
+            showToast("Publish failed: " + error.message, 'error');
             return;
         }
         
-        console.log("✅ 发布成功:", data);
-        showToast("发布成功！🎉", 'success');
+        console.log("Publish success:", data);
+        showToast("Published successfully!", 'success');
         
-        // 清空表单
         clearPostForm();
         
-        // 延迟跳转到首页并刷新Feed
         setTimeout(() => {
             switchPage('swipe');
-            // 刷新Feed以显示新帖子
             if (window.refreshSwipeFeed) {
                 setTimeout(() => {
                     window.refreshSwipeFeed();
@@ -336,35 +314,31 @@ export async function publishPost() {
         }, 1000);
         
     } catch (err) {
-        console.error("❌ 发布异常:", err);
-        showToast("发布失败，请稍后重试", 'error');
+        console.error("Publish error:", err);
+        showToast("Publish failed, please try again", 'error');
     } finally {
-        // 恢复按钮状态
         if (publishBtn) {
             publishBtn.disabled = false;
-            publishBtn.textContent = originalText || '发布';
+            publishBtn.textContent = originalText || 'Publish';
         }
     }
 }
 
 /**
- * 上传画布图片
+ * Upload canvas image
  */
 async function uploadCanvasImage() {
     const client = getSupabaseClient();
     if (!client) return null;
     
     try {
-        // 将画布转换为 Blob
         const blob = await new Promise(resolve => {
             postCanvas.toBlob(resolve, 'image/png');
         });
         
-        // 生成文件名
         const fileName = `${appState.user.id}-${Date.now()}.png`;
         const filePath = `posts/${fileName}`;
         
-        // 上传到 Supabase Storage
         const { error: uploadError } = await client.storage
             .from('post-images')
             .upload(filePath, blob, {
@@ -373,42 +347,38 @@ async function uploadCanvasImage() {
             });
         
         if (uploadError) {
-            console.error("❌ 图片上传失败:", uploadError);
+            console.error("Image upload failed:", uploadError);
             throw uploadError;
         }
         
-        // 获取公开 URL
         const { data } = client.storage
             .from('post-images')
             .getPublicUrl(filePath);
         
-        console.log("✅ 图片上传成功:", data.publicUrl);
+        console.log("Image upload success:", data.publicUrl);
         return data.publicUrl;
         
     } catch (err) {
-        console.error("❌ 图片上传异常:", err);
+        console.error("Image upload error:", err);
         throw err;
     }
 }
 
 /**
- * 清空发帖表单
+ * Clear post form
  */
 function clearPostForm() {
-    // 清空文字
     const textarea = document.getElementById('postTextarea');
     if (textarea) {
         textarea.value = '';
         updatePostCharCount();
     }
     
-    // 清空画布
     if (postCanvas && postCtx) {
         postCtx.fillStyle = '#ffffff';
         postCtx.fillRect(0, 0, postCanvas.width, postCanvas.height);
         postCtx.fillStyle = currentColor;
         
-        // 显示占位符
         const placeholder = document.getElementById('canvasPlaceholder');
         if (placeholder) placeholder.style.display = 'flex';
         
@@ -419,7 +389,6 @@ function clearPostForm() {
     }
 }
 
-// 导出到 window
 window.initCreatePost = initCreatePost;
 window.publishPost = publishPost;
 window.clearPostCanvas = clearPostCanvas;
@@ -428,4 +397,3 @@ window.setPostColor = setPostColor;
 window.togglePostStickers = togglePostStickers;
 window.addPostSticker = addPostSticker;
 window.updatePostCharCount = updatePostCharCount;
-
