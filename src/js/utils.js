@@ -1,10 +1,10 @@
 /**
- * 工具函数模块
- * 包含各种辅助函数
+ * Utility Functions Module
+ * Contains various helper functions
  */
 
 /**
- * 启动登录演示动画（可选）
+ * Start login demo animation (optional)
  */
 export function startLoginDemo() {
     const overlay = document.getElementById('demoOverlay');
@@ -14,11 +14,11 @@ export function startLoginDemo() {
     const textEl = document.getElementById('demoText');
     
     if (emojiEl) emojiEl.textContent = "💩";
-    if (textEl) textEl.textContent = "准备好解压了吗？";
+    if (textEl) textEl.textContent = "Ready to de-stress?";
 }
 
 /**
- * 显示 Toast 提示
+ * Show Toast notification
  */
 export function showToast(message, type = 'success', duration = 3000) {
     const toast = document.getElementById('toast');

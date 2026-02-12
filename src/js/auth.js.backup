@@ -1,6 +1,6 @@
 /**
- * Authentication Module
- * Handle user login, registration, logout
+ * 认证模块
+ * 处理用户登录、注册、登出等功能
  */
 
 import { getSupabaseClient } from './supabase.js';
@@ -20,27 +20,29 @@ export async function handleLogin(email, password) {
         password = document.getElementById('loginPassword')?.value;
     }
     
+    // 输入验证
     if (!email || !password) {
-        showToast("Please enter email and password", 'error');
-        console.warn("Login failed: email or password empty");
+        showToast("请输入邮箱和密码", 'error');
+        console.warn("⚠️ 登录失败: 邮箱或密码为空");
         return false;
     }
     
+    // 邮箱格式验证
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-        showToast("Please enter a valid email address", 'error');
+        showToast("请输入有效的邮箱地址", 'error');
         return false;
     }
 
-    console.log("========== Login Start ==========");
-    console.log("Email:", email);
-    console.log("Password:", "*".repeat(password.length));
+    console.log("🔐 ========== 开始登录 ==========");
+    console.log("📧 邮箱:", email);
+    console.log("🔑 密码:", "*".repeat(password.length));
 
     const client = getSupabaseClient();
     if (!client) {
-        const errorMsg = "Network error, Supabase not ready. Check: 1) Supabase script loaded 2) VPN/Network 3) Console errors";
+        const errorMsg = "网络连接异常，Supabase 未就绪。请检查：1) 是否已引入 Supabase 脚本 2) 科学上网环境 3) 控制台具体报错";
         showToast(errorMsg, 'error', 5000);
-        console.error("Error:", errorMsg);
+        console.error("❌", errorMsg);
         return false;
     }
 

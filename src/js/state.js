@@ -1,11 +1,10 @@
 /**
- * 应用状态管理模块
- * 管理全局应用状态
+ * Application State Management Module
+ * Manage global application state
  */
 
 import { APP_CONFIG } from './config.js';
 
-// 全局应用状态
 export const appState = {
     isLoggedIn: false,
     isGuest: false,
@@ -21,7 +20,7 @@ export const appState = {
 };
 
 /**
- * 更新用户信息
+ * Update user info
  */
 export function updateUser(userData) {
     appState.user = userData;
@@ -30,7 +29,7 @@ export function updateUser(userData) {
 }
 
 /**
- * 清除用户信息
+ * Clear user info
  */
 export function clearUser() {
     appState.user = null;
@@ -39,12 +38,12 @@ export function clearUser() {
 }
 
 /**
- * 设置游客模式
+ * Set guest mode
  */
 export function setGuestMode() {
     appState.isLoggedIn = true;
     appState.isGuest = true;
-    appState.user = { id: 'guest', name: '匿名用户' };
+    appState.user = { id: 'guest', name: 'Anonymous' };
 }
 
 /**

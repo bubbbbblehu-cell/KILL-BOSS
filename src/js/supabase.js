@@ -1,6 +1,6 @@
 /**
- * Supabase 客户端管理模块
- * 负责 Supabase 客户端的初始化和加载
+ * Supabase Client Management Module
+ * Handle Supabase client initialization and loading
  */
 
 import { SUPABASE_CONFIG } from './config.js';
@@ -8,7 +8,7 @@ import { SUPABASE_CONFIG } from './config.js';
 let _supabaseClient = null;
 
 /**
- * 初始化 Supabase 客户端
+ * Initialize Supabase client
  */
 export function initSupabase() {
     if (_supabaseClient) return _supabaseClient;
@@ -25,17 +25,17 @@ export function initSupabase() {
                     }
                 }
             );
-            console.log("✅ Supabase 客户端已初始化", {
+            console.log("Supabase client initialized", {
                 url: SUPABASE_CONFIG.url,
                 keyPrefix: SUPABASE_CONFIG.key.substring(0, 20) + '...'
             });
             return _supabaseClient;
         } else {
-            console.warn("⚠️ supabase 对象未定义，可能脚本未加载");
+            console.warn("supabase object undefined, script may not be loaded");
         }
     } catch (err) {
-        console.error("❌ Supabase 初始化错误:", err);
-        console.error("错误详情:", {
+        console.error("Supabase initialization error:", err);
+        console.error("Error details:", {
             message: err.message,
             stack: err.stack,
             name: err.name
@@ -45,18 +45,16 @@ export function initSupabase() {
 }
 
 /**
- * 动态加载 Supabase 库并初始化
+ * Dynamically load Supabase library and initialize
  */
 export function loadSupabaseAndInit() {
     return new Promise((resolve) => {
-        // 如果已经加载，直接初始化
         if (typeof supabase !== 'undefined') {
             _supabaseClient = initSupabase();
             resolve(_supabaseClient);
             return;
         }
         
-        // 动态加载 Supabase 脚本
         const script = document.createElement('script');
         script.src = `https://cdn.jsdelivr.net/npm/@supabase/supabase-js@${SUPABASE_CONFIG.version}`;
         script.async = true;
@@ -74,13 +72,13 @@ export function loadSupabaseAndInit() {
                             }
                         }
                     );
-                    console.log("✅ Supabase 已通过 CDN 加载并初始化");
+                    console.log("Supabase loaded via CDN and initialized");
                 } else {
-                    console.error("❌ 脚本加载完成但 supabase 对象仍不可用");
+                    console.error("Script loaded but supabase object still unavailable");
                 }
             } catch (e) {
-                console.error("❌ Supabase 动态加载后初始化失败:", e);
-                console.error("错误详情:", {
+                console.error("Supabase initialization failed after dynamic load:", e);
+                console.error("Error details:", {
                     message: e.message,
                     stack: e.stack,
                     name: e.name
@@ -90,9 +88,9 @@ export function loadSupabaseAndInit() {
         };
         
         script.onerror = (error) => {
-            console.error("❌ 无法加载 Supabase 脚本，请检查网络或科学上网环境");
-            console.error("脚本加载错误:", error);
-            console.error("尝试加载的 URL:", script.src);
+            console.error("Cannot load Supabase script, check network or VPN");
+            console.error("Script load error:", error);
+            console.error("Attempted URL:", script.src);
             resolve(null);
         };
         
@@ -101,34 +99,34 @@ export function loadSupabaseAndInit() {
 }
 
 /**
- * 获取 Supabase 客户端实例
+ * Get Supabase client instance
  */
 export function getSupabaseClient() {
     return _supabaseClient || initSupabase();
 }
 
 /**
- * 检查并恢复登录会话
+ * Check and restore login session
  */
 export async function checkAndRestoreSession() {
     const client = getSupabaseClient();
     if (!client) {
-        console.log("⚠️ Supabase 未就绪，跳过会话检查");
+        console.log("Supabase not ready, skip session check");
         return null;
     }
 
     try {
-        console.log("🔍 检查登录状态...");
+        console.log("Checking login status...");
         const { data: { session }, error } = await client.auth.getSession();
         
         if (error) {
-            console.warn("⚠️ 获取会话失败:", error.message);
+            console.warn("Get session failed:", error.message);
             return null;
         }
 
         return session;
     } catch (err) {
-        console.error("❌ 检查会话时发生异常:", err);
+        console.error("Session check error:", err);
         return null;
     }
 }
