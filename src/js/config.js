@@ -14,7 +14,7 @@ export const SUPABASE_CONFIG = {
     // 1. 访问 https://supabase.com/dashboard/project/rjqdxxwurocqsewvtduf/settings/api
     // 2. 找到 "Project API keys" 部分
     // 3. 复制 "anon" / "public" key（不是 service_role key）
-    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqcWR4eHd1cm9jcXNld3Z0ZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3NTU5NzcsImV4cCI6MjA1MjMzMTk3N30.请替换为你的实际key',
+    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqcWR4eHd1cm9jcXNld3Z0ZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMTE5MDcsImV4cCI6MjA4NTc4NzkwN30.2RauWCLnayx_C1-0wTW6GDWcmFEX-u29EdX13OOkKeQ',
     version: '2.39.0'
 };
 
