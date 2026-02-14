@@ -21,7 +21,14 @@ export function initSupabase() {
                 {
                     auth: {
                         persistSession: true,
-                        autoRefreshToken: true
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true,
+                        flowType: 'pkce'
+                    },
+                    global: {
+                        headers: {
+                            // 确保所有 header 值都是 ASCII 字符
+                        }
                     }
                 }
             );
@@ -68,7 +75,14 @@ export function loadSupabaseAndInit() {
                         {
                             auth: {
                                 persistSession: true,
-                                autoRefreshToken: true
+                                autoRefreshToken: true,
+                                detectSessionInUrl: true,
+                                flowType: 'pkce'
+                            },
+                            global: {
+                                headers: {
+                                    // 确保所有 header 值都是 ASCII 字符
+                                }
                             }
                         }
                     );

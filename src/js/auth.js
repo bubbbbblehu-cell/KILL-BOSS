@@ -156,11 +156,14 @@ export async function sendMagicLink() {
 
     try {
         console.log("正在发送登录链接...");
+        // 确保所有参数都是纯 ASCII 字符，避免 ISO-8859-1 编码错误
         const { data, error } = await client.auth.signInWithOtp({
             email: email,
             options: {
                 shouldCreateUser: true,
-                emailRedirectTo: window.location.origin
+                emailRedirectTo: window.location.origin,
+                // 不要在 options 中传递任何可能包含中文的参数
+                data: {} // 确保 data 对象为空或只包含 ASCII 字符
             }
         });
 
@@ -328,11 +331,14 @@ export async function sendVerificationCode() {
     try {
         console.log("正在发送验证码...");
         
+        // 确保所有参数都是纯 ASCII 字符，避免 ISO-8859-1 编码错误
         const { data, error } = await client.auth.signInWithOtp({
             email: email,
             options: {
                 shouldCreateUser: true,
-                emailRedirectTo: window.location.origin
+                emailRedirectTo: window.location.origin,
+                // 不要在 options 中传递任何可能包含中文的参数
+                data: {} // 确保 data 对象为空或只包含 ASCII 字符
             }
         });
 

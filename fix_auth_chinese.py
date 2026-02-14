@@ -131,3 +131,5 @@ with open('src/js/auth.js', 'w', encoding='utf-8') as f:
 print("✅ Fixed Chinese characters in auth.js")
 print("📝 Backup saved as auth.js.backup")
 
+
+
