@@ -51,33 +51,13 @@ async function loadPosts() {
             throw postsError;
         }
 
-        const userIds = [...new Set((postsData || []).map(p => p.user_id))];
-        
-        let usersMap = {};
-        if (userIds.length > 0) {
-            try {
-                const { data: usersData, error: usersError } = await client
-                    .from('users')
-                    .select('id, name, email, avatar_url')
-                    .in('id', userIds);
-                
-                if (!usersError && usersData) {
-                    usersMap = usersData.reduce((acc, user) => {
-                        acc[user.id] = user;
-                        return acc;
-                    }, {});
-                }
-            } catch (usersErr) {
-                console.warn("Failed to query users:", usersErr);
-            }
-        }
-
+        // 直接使用 posts 表中的 user_name 和 user_email 字段，不再查询 users 表
         posts = (postsData || []).map(post => ({
             ...post,
-            user: usersMap[post.user_id] || {
+            user: {
                 id: post.user_id,
-                name: post.user_id.split('-')[0] || 'User',
-                email: null
+                name: post.user_name || post.user_email?.split('@')[0] || 'Anonymous',
+                email: post.user_email
             }
         }));
         

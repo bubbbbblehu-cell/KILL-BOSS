@@ -467,8 +467,8 @@ export async function handleLoginWithCode() {
         return false;
     }
     
-    if (code.length !== 8) {
-        showToast("验证码为8位数字", 'error');
+    if (code.length !== 6) {
+        showToast("验证码为6位数字", 'error');
         return false;
     }
 
