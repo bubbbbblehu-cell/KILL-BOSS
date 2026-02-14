@@ -415,11 +415,14 @@ export async function sendVerificationCode() {
             
             // 显示验证码输入框
             const codeInput = document.getElementById('loginCodeInput');
+            const sendBtn = document.getElementById('sendCodeBtn');
             const loginBtn = document.getElementById('loginBtn');
+            const codeHint = document.getElementById('codeHint');
             
             if (codeInput) codeInput.style.display = 'block';
             if (sendBtn) sendBtn.style.display = 'none';
             if (loginBtn) loginBtn.style.display = 'block';
+            if (codeHint) codeHint.style.display = 'block';
             
             // 聚焦到验证码输入框
             setTimeout(() => {
@@ -464,8 +467,8 @@ export async function handleLoginWithCode() {
         return false;
     }
     
-    if (code.length !== 6) {
-        showToast("验证码为6位数字", 'error');
+    if (code.length !== 8) {
+        showToast("验证码为8位数字", 'error');
         return false;
     }
 

@@ -48,16 +48,32 @@
                                            placeholder="请输入邮箱" 
                                            autocomplete="email"
                                            oninput="handleEmailInput(event)"
-                                           onkeypress="if(event.key==='Enter') document.getElementById('sendMagicLinkBtn').click()">
+                                           onkeypress="if(event.key==='Enter') document.getElementById('sendCodeBtn').click()">
                                     <div class="email-suggestions" id="loginEmailSuggestionsList"></div>
                                 </div>
                             </div>
-                            <button class="btn btn-primary" id="sendMagicLinkBtn" onclick="sendMagicLink()">发送登录链接</button>
-                            <div class="login-hint" id="magicLinkHint" style="display: none; margin-top: 15px; padding: 15px; background: #f0f9ff; border-radius: 8px; color: #0369a1; font-size: 14px; line-height: 1.6;">
-                                <div style="font-weight: 600; margin-bottom: 8px;">📧 登录链接已发送！</div>
-                                <div>请检查邮箱（包括垃圾邮件文件夹），点击邮件中的"Log In"链接即可登录。</div>
-                                <div style="margin-top: 8px; font-size: 13px; color: #0284c7;">💡 提示：链接有效期为 1 小时</div>
+                            
+                            <!-- 验证码输入框（初始隐藏） -->
+                            <div class="form-group" id="loginCodeInput" style="display: none;">
+                                <label class="form-label">验证码</label>
+                                <input type="text" 
+                                       class="form-input" 
+                                       id="loginCode" 
+                                       placeholder="请输入8位验证码" 
+                                       maxlength="8"
+                                       autocomplete="one-time-code"
+                                       onkeypress="if(event.key==='Enter') handleLoginWithCode()">
                             </div>
+                            
+                            <button class="btn btn-primary" id="sendCodeBtn" onclick="sendVerificationCode()">发送验证码</button>
+                            <button class="btn btn-primary" id="loginBtn" style="display: none;" onclick="handleLoginWithCode()">登 录</button>
+                            
+                            <div class="login-hint" id="codeHint" style="display: none; margin-top: 15px; padding: 15px; background: #f0f9ff; border-radius: 8px; color: #0369a1; font-size: 14px; line-height: 1.6;">
+                                <div style="font-weight: 600; margin-bottom: 8px;">📧 验证码已发送！</div>
+                                <div>请检查邮箱（包括垃圾邮件文件夹），输入邮件中的8位数字验证码。</div>
+                                <div style="margin-top: 8px; font-size: 13px; color: #0284c7;">💡 提示：验证码有效期为 1 小时</div>
+                            </div>
+                            
                             <button class="btn btn-guest" onclick="handleGuestLogin()">以游客身份进入</button>
                         </div>
 
