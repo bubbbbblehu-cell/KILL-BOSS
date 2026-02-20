@@ -289,8 +289,7 @@ function startMagicLinkCountdown(button, seconds) {
 }
 
 /**
- * 发送验证码（已废弃，改用 Magic Link）
- * @deprecated 已改用 Magic Link 登录
+ * 发送验证码
  */
 export async function sendVerificationCode() {
     const email = document.getElementById('loginEmail')?.value?.trim();
@@ -332,14 +331,12 @@ export async function sendVerificationCode() {
     try {
         console.log("正在发送验证码...");
         
-        // 确保所有参数都是纯 ASCII 字符，避免 ISO-8859-1 编码错误
+        // 发送 OTP 验证码（不设置 emailRedirectTo，这样会发送验证码而不是链接）
         const { data, error } = await client.auth.signInWithOtp({
             email: email,
             options: {
                 shouldCreateUser: true,
-                emailRedirectTo: window.location.origin,
-                // 不要在 options 中传递任何可能包含中文的参数
-                data: {} // 确保 data 对象为空或只包含 ASCII 字符
+                // 不设置 emailRedirectTo，确保发送验证码而不是 Magic Link
             }
         });
 
@@ -423,14 +420,17 @@ export async function sendVerificationCode() {
             if (codeInput) codeInput.style.display = 'block';
             if (sendBtn) sendBtn.style.display = 'none';
             if (loginBtn) loginBtn.style.display = 'block';
-            if (codeHint) codeHint.style.display = 'block';
+            if (codeHint) {
+                codeHint.style.display = 'block';
+                codeHint.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
             
             // 聚焦到验证码输入框
             setTimeout(() => {
                 document.getElementById('loginCode')?.focus();
             }, 300);
             
-            // 开始倒计时
+            // 开始倒计时（60秒后可以重新发送）
             startCodeCountdown();
             
             console.log("📧 ========== 发送完成 ==========");
