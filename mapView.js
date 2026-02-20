@@ -146,8 +146,8 @@ async function getUserLocation() {
             },
             (error) => {
                 console.error('定位失败:', error);
-                // 使用默认位置（杭州）
-                resolve({ lat: 30.2741, lng: 120.1551 });
+                // 使用默认位置（西双版纳景洪市中心）
+                resolve({ lat: 21.9621, lng: 100.7979 });
             },
             {
                 enableHighAccuracy: true,
@@ -241,21 +241,67 @@ async function loadMapData() {
     try {
         const radius = 5; // 5公里范围
         
-        // 生成模拟数据
-        mapData.shitPoints = generateMockShitPoints(50).map(s => new ShitPoint(s));
-        mapData.towers = generateMockTowers(3).map(t => new ShitTower(t));
-        mapData.buildings = generateMockBuildings(10).map(b => new Building(b));
+        // 从 Supabase 加载西双版纳的酒店数据
+        const xishuangbannaId = '56fe3f17-3dfc-4c14-a745-d2ab37226514';
+        
+        if (typeof supabase !== 'undefined') {
+            console.log('开始从数据库加载西双版纳酒店数据...');
+            
+            const { data: hotels, error } = await supabase
+                .from('hotels')
+                .select('*')
+                .eq('city_id', xishuangbannaId);
+            
+            if (error) {
+                console.error('查询酒店数据失败:', error);
+                // 使用模拟数据作为后备
+                useMockData();
+            } else if (hotels && hotels.length > 0) {
+                console.log(`✅ 成功加载 ${hotels.length} 个西双版纳酒店数据`);
+                
+                // 将酒店数据转换为建筑标记
+                mapData.buildings = hotels.map(hotel => new Building({
+                    id: hotel.id,
+                    name: hotel.name,
+                    latitude: hotel.latitude,
+                    longitude: hotel.longitude,
+                    building_type: 'office', // 酒店类型
+                    is_occupied: false,
+                    occupied_by: null,
+                    nearby_shit_count: 0
+                }));
+                
+                // 生成少量模拟便便和屎塔数据
+                mapData.shitPoints = generateMockShitPoints(50).map(s => new ShitPoint(s));
+                mapData.towers = generateMockTowers(3).map(t => new ShitTower(t));
+            } else {
+                console.warn('未查询到西双版纳酒店数据，使用模拟数据');
+                useMockData();
+            }
+        } else {
+            console.warn('Supabase 未加载，使用模拟数据');
+            useMockData();
+        }
         
         mapData.lastUpdate = new Date();
         
         // 更新信息面板
         updateMapInfoPanel();
         
-        console.log(`加载数据: ${mapData.shitPoints.length}个便便, ${mapData.towers.length}个屎塔, ${mapData.buildings.length}个建筑`);
+        console.log(`地图数据加载完成: ${mapData.shitPoints.length}个便便, ${mapData.towers.length}个屎塔, ${mapData.buildings.length}个建筑`);
     } catch (error) {
         console.error('加载地图数据失败:', error);
-        throw error;
+        useMockData();
     }
+}
+
+/**
+ * 使用模拟数据（后备方案）
+ */
+function useMockData() {
+    mapData.shitPoints = generateMockShitPoints(50).map(s => new ShitPoint(s));
+    mapData.towers = generateMockTowers(3).map(t => new ShitTower(t));
+    mapData.buildings = generateMockBuildings(10).map(b => new Building(b));
 }
 
 /**
@@ -263,7 +309,8 @@ async function loadMapData() {
  */
 function generateMockShitPoints(count) {
     const points = [];
-    const baseLatLng = mapData.userLocation;
+    // 使用西双版纳的坐标作为基准
+    const baseLatLng = mapData.userLocation || { lat: 21.9621, lng: 100.7979 };
     
     for (let i = 0; i < count; i++) {
         const offsetLat = (Math.random() - 0.5) * 0.02;
@@ -287,7 +334,8 @@ function generateMockShitPoints(count) {
  */
 function generateMockTowers(count) {
     const towers = [];
-    const baseLatLng = mapData.userLocation;
+    // 使用西双版纳的坐标作为基准
+    const baseLatLng = mapData.userLocation || { lat: 21.9621, lng: 100.7979 };
     
     for (let i = 0; i < count; i++) {
         const offsetLat = (Math.random() - 0.5) * 0.015;
@@ -314,7 +362,8 @@ function generateMockTowers(count) {
  */
 function generateMockBuildings(count) {
     const buildings = [];
-    const baseLatLng = mapData.userLocation;
+    // 使用西双版纳的坐标作为基准
+    const baseLatLng = mapData.userLocation || { lat: 21.9621, lng: 100.7979 };
     const buildingNames = ['科技大厦', '金融中心', '创业园区', '商业广场', '写字楼'];
     
     for (let i = 0; i < count; i++) {
