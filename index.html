@@ -65,13 +65,13 @@
                                        onkeypress="if(event.key==='Enter') handleLoginWithCode()">
                             </div>
                             
-                            <button class="btn btn-primary" id="sendCodeBtn" onclick="sendVerificationCode()">发送验证码</button>
-                            <button class="btn btn-primary" id="loginBtn" style="display: none;" onclick="handleLoginWithCode()">登 录</button>
+                            <button class="btn btn-primary" id="sendCodeBtn" onclick="sendMagicLink()">发送登录链接</button>
                             
-                            <div class="login-hint" id="codeHint" style="display: none; margin-top: 15px; padding: 15px; background: #f0f9ff; border-radius: 8px; color: #0369a1; font-size: 14px; line-height: 1.6;">
-                                <div style="font-weight: 600; margin-bottom: 8px;">📧 验证码已发送！</div>
-                                <div>请检查邮箱（包括垃圾邮件文件夹），输入邮件中的6位数字验证码。</div>
-                                <div style="margin-top: 8px; font-size: 13px; color: #0284c7;">💡 提示：验证码有效期为 1 小时</div>
+                            <div class="login-hint" id="magicLinkHint" style="display: none; margin-top: 15px; padding: 15px; background: #f0f9ff; border-radius: 8px; color: #0369a1; font-size: 14px; line-height: 1.6;">
+                                <div style="font-weight: 600; margin-bottom: 8px;">📧 登录链接已发送！</div>
+                                <div>请检查邮箱（包括垃圾邮件文件夹），点击邮件中的 <strong>"Log In"</strong> 按钮即可登录。</div>
+                                <div style="margin-top: 8px; font-size: 13px; color: #0284c7;">💡 提示：链接有效期为 1 小时</div>
+                                <div style="margin-top: 8px; font-size: 13px; color: #0284c7;">⚠️ 注意：每小时最多发送 3-4 封邮件</div>
                             </div>
                             
                             <button class="btn btn-guest" onclick="handleGuestLogin()">以游客身份进入</button>

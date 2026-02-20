@@ -237,6 +237,7 @@ export async function sendMagicLink() {
             const hint = document.getElementById('magicLinkHint');
             if (hint) {
                 hint.style.display = 'block';
+                hint.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
             
             // 记住登录邮箱
